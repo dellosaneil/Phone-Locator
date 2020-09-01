@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
+    <color name="colorPrimary">#ffeb3b</color>
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
+
+    <color name="snow">#FDFFFC</color>
+    <color name="darkBlack">#000300</color>
+
+    <color name="buttonColor">#6CD4FF</color>
+
+    <color name="card1_color">#B3E5FC</color>
+    <color name="card2_color">#FFCDD2</color>
+
+
+
 </resources>

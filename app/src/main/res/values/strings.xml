@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">PhoneTracker</string>
+
+    <string name="application_name">Phone Tracker</string>
+    <string name="welcome">Welcome Back</string>
+    <string name="enter_username">Enter Username</string>
+    <string name="enter_password">Enter Password</string>
+    <string name="log_in">Log In</string>
+
+    <string name="option">Choose an Option</string>
+    <string name="log_in_sign_up">Log In/Sign Up</string>
+    <string name="find_phone">Find Lost Phone</string>
+
+
 </resources>

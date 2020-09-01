@@ -11,5 +11,26 @@
     <string name="log_in_sign_up">Log In/Sign Up</string>
     <string name="find_phone">Find Lost Phone</string>
 
+    <!--    Log In Activity-->
+    <string name="sign_up"><u>Sign Up</u></string>
+
+<!--    Sign Up Activity-->
+    <string name="full_name">Enter Full Name</string>
+    <string name="enter_email">Enter Email</string>
+    <string name="create_account">Create Account</string>
+    <string name="next">Next</string>
+
+
+<!--    Error Messages-->
+    <string name="missing_field">Required Field</string>
+    <string name="invalid_email">Invalid Email</string>
+
+    <string name="invalid_name">Invalid Name</string>
+    <string name="minimum_length_full_name">Enter Full Name</string>
+    <string name="password_length">Password Too Short</string>
+    <string name="username_length">Username Too Short</string>
+    <string name="username_taken">Username is already used.</string>
+
+
 
 </resources>

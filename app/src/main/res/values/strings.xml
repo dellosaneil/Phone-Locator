@@ -34,11 +34,15 @@
     <string name="email_taken">Email is already used.</string>
 
 
-<!--    Main Dashboard-->
+    <!--    Main Dashboard-->
     <string name="main_dashboard_register_unregister_phone">Register/Unregister Phone</string>
     <string name="main_dashboard_request_friend_location">Request Friend Location</string>
     <string name="main_dashboard_list_of_location">Go To Map</string>
     <string name="main_dashboard_settings">Settings</string>
 
+
+<!--    Register Or Unregister-->
+    <string name="register_or_unregister_register">Register Phone</string>
+    <string name="register_or_unregister_unregister">Unregister Phone</string>
 
 </resources>

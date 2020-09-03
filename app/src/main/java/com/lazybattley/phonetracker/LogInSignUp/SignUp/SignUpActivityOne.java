@@ -32,12 +32,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
 import com.lazybattley.phonetracker.R;
 
+import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+
 public class SignUpActivityOne extends AppCompatActivity {
-
-    private static final String TAG = "SignUpActivityOne";
-
-    public static final String USERS_REFERENCE = "users";
-
     private ProgressBar signUp_progressBar;
     private TextView signUp_message;
     private TextInputLayout signUp_fullName, signUp_password, signUp_email;

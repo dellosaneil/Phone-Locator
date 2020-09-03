@@ -14,7 +14,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Dashboard.MainDashBoardActivity"></activity>
+        <activity android:name=".Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity"></activity>
+        <activity android:name=".Dashboard.MainDashBoardActivity" />
         <activity
             android:name=".LogInSignUp.SignUp.SignUpActivityOne"
             android:windowSoftInputMode="stateHidden" />

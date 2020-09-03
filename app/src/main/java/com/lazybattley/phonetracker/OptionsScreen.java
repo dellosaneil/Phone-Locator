@@ -16,7 +16,6 @@ import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
 
 public class OptionsScreen extends AppCompatActivity {
 
-    private static final String TAG = "OptionsScreen";
 
     private ImageView user_log_in_image, user_search_phone_image;
     private TextView user_log_in_text_view, user_search_phone_text_view;

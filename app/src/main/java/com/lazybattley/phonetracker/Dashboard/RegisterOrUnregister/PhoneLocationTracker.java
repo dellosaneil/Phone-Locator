@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -45,7 +46,6 @@ public class PhoneLocationTracker implements LocationListener {
     public void onLocationChanged(@NonNull Location location) {
         LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
         String phone = Build.ID;
-        Log.i(TAG, "onLocationChanged: " + phone);
         reference.child(phone).setValue(currentLocation);
     }
 

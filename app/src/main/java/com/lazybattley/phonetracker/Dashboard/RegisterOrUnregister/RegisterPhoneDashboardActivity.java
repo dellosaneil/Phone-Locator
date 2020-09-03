@@ -33,7 +33,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     private FirebaseUser user;
     private boolean state;
 
-
+    private PhoneLocationTemp temp;
 
 
     @Override
@@ -44,11 +44,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         track = new PhoneLocationTracker(this);
         user = FirebaseAuth.getInstance().getCurrentUser();
         isActive = FirebaseDatabase.getInstance().getReference(user.getUid()).child("Phone 1");
+        temp = new PhoneLocationTemp(this);
         isActive.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    for(DataSnapshot data : snapshot.getChildren()){
+                if (snapshot.exists()) {
+                    for (DataSnapshot data : snapshot.getChildren()) {
 
                     }
                 }
@@ -62,20 +63,23 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         phoneState();
     }
 
-    private void phoneState(){
-        if(state){
+    private void phoneState() {
+        if (state) {
             //Phone is currently not registered
-            track.stopTrack();
+//            track.stopTrack();
+            temp.stopUpdate();
+
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_register));
-        }else{
+        } else {
             //Phone is Registered
-            track.startTrack();
+//            track.startTrack();
+
+            temp.startUpdate();
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_unregister));
         }
     }
 
-    public void changeState(View view){
-
+    public void changeState(View view) {
         state = !state;
         phoneState();
     }

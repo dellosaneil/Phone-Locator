@@ -7,7 +7,9 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -19,8 +21,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 
-
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
 
 public class PhoneLocationTracker implements LocationListener {
 
@@ -28,19 +30,23 @@ public class PhoneLocationTracker implements LocationListener {
     private Context context;
     private FirebaseUser user;
     private DatabaseReference reference;
-
+    private static final String TAG = "PhoneLocationTracker";
+    
+    
+    
     public PhoneLocationTracker(Context context) {
         this.context = context;
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         user = FirebaseAuth.getInstance().getCurrentUser();
-        reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid());
-
+        reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
     }
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
         LatLng currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-        reference.child("Phone 1").setValue(currentLocation);
+        String phone = Build.ID;
+        Log.i(TAG, "onLocationChanged: " + phone);
+        reference.child(phone).setValue(currentLocation);
     }
 
     @Override
@@ -57,7 +63,8 @@ public class PhoneLocationTracker implements LocationListener {
     public void onProviderDisabled(@NonNull String provider) {
 
     }
-    public void stopTrack(){
+
+    public void stopTrack() {
         locationManager.removeUpdates(this);
     }
 
@@ -70,9 +77,6 @@ public class PhoneLocationTracker implements LocationListener {
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, this);
     }
-
-
-
 }
 
 

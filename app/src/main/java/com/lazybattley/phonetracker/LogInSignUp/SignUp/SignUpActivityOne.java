@@ -1,38 +1,26 @@
 package com.lazybattley.phonetracker.LogInSignUp.SignUp;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.util.Pair;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
-import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
 import com.lazybattley.phonetracker.R;
 
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAILS;
 
 public class SignUpActivityOne extends AppCompatActivity {
     private ProgressBar signUp_progressBar;
@@ -117,7 +105,7 @@ public class SignUpActivityOne extends AppCompatActivity {
                                     .addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Toast.makeText(SignUpActivityOne.this, "New account created, Check email for verification", Toast.LENGTH_LONG).show();
-                                            createTableProfile(user.getEmail(), user.getUid(), fullName);
+                                            addNewUser(user.getEmail(), user.getUid(), fullName);
                                             editable();
                                             signUp_redirect();
                                         } else {
@@ -163,8 +151,11 @@ public class SignUpActivityOne extends AppCompatActivity {
         }
     }
 
-    private void createTableProfile(String username, String uid, String fullName) {
-        reference.child(uid).setValue(new SignUpHelperClass(uid, username, fullName));
+
+
+    //Adds new user in the database
+    private void addNewUser(String username, String uid, String fullName) {
+        reference.child(uid).child(USER_DETAILS).setValue(new SignUpHelperClass(uid, username, fullName));
     }
 
 

@@ -46,12 +46,12 @@
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/log_in_username"
+                    android:id="@+id/log_in_email"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:hint="@string/enter_username"
+                    android:hint="@string/enter_email"
                     android:textColor="@color/darkBlack"
                     app:boxStrokeColor="@color/darkBlack"
                     app:hintTextColor="@color/darkBlack"
@@ -64,7 +64,7 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
+                        android:inputType="textEmailAddress"
                         android:transitionName="log_in_transition_text_view" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -79,7 +79,7 @@
                     app:hintTextColor="@color/darkBlack"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/log_in_username"
+                    app:layout_constraintTop_toBottomOf="@+id/log_in_email"
                     app:passwordToggleEnabled="true"
                     app:startIconDrawable="@drawable/password">
 

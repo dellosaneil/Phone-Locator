@@ -5,18 +5,22 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity;
 import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
 
 public class SplashScreen extends AppCompatActivity {
     private Animation animation;
     private ImageView splashScreen_logo;
     private TextView splashScreen_text;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,14 +32,18 @@ public class SplashScreen extends AppCompatActivity {
         animation = AnimationUtils.loadAnimation(this, R.anim.splash_screen_animation);
         splashScreen_logo.setAnimation(animation);
         splashScreen_text.setAnimation(animation);
+        auth = FirebaseAuth.getInstance();
 
         Handler handler = new Handler();
         Runnable run = () -> {
-            Intent intent = new Intent(SplashScreen.this, OptionsScreen.class);
-            startActivity(intent);
-            finish();
+            if(auth.getCurrentUser() != null  && auth.getCurrentUser().isEmailVerified()){
+                startActivity(new Intent(this, MainDashBoardActivity.class));
+            }else{
+                Intent intent = new Intent(SplashScreen.this, OptionsScreen.class);
+                startActivity(intent);
+                finish();
+            }
         };
         handler.postDelayed(run, 1500);
-
     }
 }

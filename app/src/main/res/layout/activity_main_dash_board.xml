@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Dashboard.MainDashBoardActivity"
+    android:background="@color/snow">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_margin="35dp"
+        android:padding="35dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mainDashBoard_register_unregister"
+            android:layout_width="250dp"
+            android:layout_height="110dp"
+            android:layout_gravity="center"
+            android:backgroundTint="@color/card1_color"
+            android:elevation="10dp"
+            android:onClick="mainDashboard_options"
+            android:tag="register"
+            android:text="@string/main_dashboard_register_unregister_phone"
+            android:textColor="@color/darkBlack"
+            app:cornerRadius="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mainDashBoard_requestLocation"
+            android:layout_width="250dp"
+            android:layout_height="110dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/card1_color"
+            android:elevation="10dp"
+            android:onClick="mainDashboard_options"
+            android:tag="request"
+            android:text="@string/main_dashboard_request_friend_location"
+            android:textColor="@color/darkBlack"
+            app:cornerRadius="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mainDashBoard_goToMap"
+            android:layout_width="250dp"
+            android:layout_height="110dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/card1_color"
+            android:elevation="10dp"
+            android:onClick="mainDashboard_options"
+            android:tag="map"
+            android:text="@string/main_dashboard_list_of_location"
+            android:textColor="@color/darkBlack"
+            app:cornerRadius="10dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mainDashBoard_settings"
+            android:layout_width="250dp"
+            android:layout_height="110dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:backgroundTint="@color/card1_color"
+            android:elevation="10dp"
+            android:onClick="mainDashboard_options"
+            android:tag="settings"
+            android:text="@string/main_dashboard_settings"
+            android:textColor="@color/darkBlack"
+            app:cornerRadius="10dp" />
+
+
+
+
+
+
+    </LinearLayout>
+
+
+
+</ScrollView>

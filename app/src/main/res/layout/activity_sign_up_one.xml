@@ -11,17 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <ProgressBar
-            android:id="@+id/signUp_progressBar"
-            style="?android:attr/progressBarStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline7"
             android:layout_width="wrap_content"
@@ -39,7 +28,7 @@
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="50dp"
-            android:layout_height="46dp"
+            android:layout_height="50dp"
             android:layout_marginStart="32dp"
             android:layout_marginTop="32dp"
             android:src="@drawable/new_user"
@@ -76,6 +65,19 @@
             app:layout_constraintStart_toStartOf="@+id/guideline6"
             app:layout_constraintTop_toBottomOf="@+id/signUp_message">
 
+            <ProgressBar
+                android:id="@+id/signUp_progressBar"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                android:layout_gravity="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -92,32 +94,36 @@
                     android:hint="@string/full_name"
                     android:transitionName="log_in_transition_text_view"
                     app:counterMaxLength="40"
-                    app:endIconMode="clear_text">
+                    app:endIconMode="clear_text"
+                    app:startIconDrawable="@drawable/full_name">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:drawableEnd="@drawable/cancel_button"
                         android:inputType="text"
-                        android:maxLength="40" />
+                        android:maxLength="40"
+                        android:textSize="12sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/signUp_username"
+                    android:id="@+id/signUp_email"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:hint="@string/enter_username"
+                    android:hint="@string/enter_email"
                     android:transitionName="log_in_transition_text_view"
-                    app:counterMaxLength="15"
-                    app:endIconMode="clear_text">
+                    app:endIconMode="clear_text"
+                    app:startIconDrawable="@drawable/mail">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
-                        android:maxLength="15" />
+                        android:drawableEnd="@drawable/cancel_button"
+                        android:inputType="textEmailAddress"
+                        android:textSize="12sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -129,12 +135,14 @@
                     android:layout_marginTop="16dp"
                     android:hint="@string/enter_password"
                     android:transitionName="log_in_transition_text_view"
-                    app:passwordToggleEnabled="true">
+                    app:passwordToggleEnabled="true"
+                    app:startIconDrawable="@drawable/password">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="textPassword" />
+                        android:inputType="textPassword"
+                        android:textSize="12sp" />
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -145,11 +153,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:backgroundTint="@color/buttonColor"
-                    android:onClick="signUp_redirect"
-                    android:text="@string/next"
+                    android:text="@string/signUp"
                     android:textColor="@color/darkBlack"
                     android:textSize="16sp"
-                    android:transitionName="log_in_transition_button" />
+                    android:transitionName="log_in_transition_button"
+                    app:cornerRadius="5dp" />
+
 
             </LinearLayout>
 

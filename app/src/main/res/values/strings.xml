@@ -13,15 +13,17 @@
 
     <!--    Log In Activity-->
     <string name="sign_up"><u>Sign Up</u></string>
+    <string name="log_in_verify">Verify your account</string>
 
-<!--    Sign Up Activity-->
+    <!--    Sign Up Activity-->
     <string name="full_name">Enter Full Name</string>
     <string name="enter_email">Enter Email</string>
     <string name="create_account">Create Account</string>
-    <string name="next">Next</string>
+    <string name="signUp">Sign Up</string>
+    <string name="sign_up_enter_number">Enter Phone No.</string>
 
 
-<!--    Error Messages-->
+    <!--    Error Messages-->
     <string name="missing_field">Required Field</string>
     <string name="invalid_email">Invalid Email</string>
 
@@ -29,8 +31,14 @@
     <string name="minimum_length_full_name">Enter Full Name</string>
     <string name="password_length">Password Too Short</string>
     <string name="username_length">Username Too Short</string>
-    <string name="username_taken">Username is already used.</string>
+    <string name="email_taken">Email is already used.</string>
 
+
+<!--    Main Dashboard-->
+    <string name="main_dashboard_register_unregister_phone">Register/Unregister Phone</string>
+    <string name="main_dashboard_request_friend_location">Request Friend Location</string>
+    <string name="main_dashboard_list_of_location">Go To Map</string>
+    <string name="main_dashboard_settings">Settings</string>
 
 
 </resources>

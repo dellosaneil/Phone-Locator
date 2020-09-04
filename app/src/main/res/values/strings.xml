@@ -14,7 +14,9 @@
     <!--    Log In Activity-->
     <string name="sign_up"><u>Sign Up</u></string>
     <string name="log_in_verify">Verify your account</string>
-
+    <string name="log_in_invalid_format">Invalid email format</string>
+    <string name="log_in_user_not_found">User is not registered</string>
+    <string name="log_in_incorrect_pass">Incorrect password</string>
     <!--    Sign Up Activity-->
     <string name="full_name">Enter Full Name</string>
     <string name="enter_email">Enter Email</string>
@@ -44,5 +46,17 @@
 <!--    Register Or Unregister-->
     <string name="register_or_unregister_register">Register Phone</string>
     <string name="register_or_unregister_unregister">Unregister Phone</string>
+
+
+
+<!--    Image Descriptions-->
+    <string name="logo_description">Logo of Application</string>
+
+<!--    Persistent Notification-->
+    <string name="persistent_notification_some_string">Location saved</string>
+
+<!--    LocationTrackerService-->
+<string name="location_service_tracked">Location is being sent to database.</string>
+    <string name="location_service_turned_on">Tracking On</string>
 
 </resources>

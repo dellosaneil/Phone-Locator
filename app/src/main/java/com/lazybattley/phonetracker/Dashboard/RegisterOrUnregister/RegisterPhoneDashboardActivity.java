@@ -1,12 +1,11 @@
 package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
-import android.content.SharedPreferences;
+import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,60 +20,63 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.R;
 
-import java.util.UUID;
-
+import static com.lazybattley.phonetracker.GlobalVariables.LOG_IN_BUILD_EXTRA;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED;
+import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
 
 public class RegisterPhoneDashboardActivity extends AppCompatActivity {
 
     private MaterialButton registerPhone_registerOrUnregisterButton;
-    private PhoneLocationTracker track;
     private DatabaseReference isActive;
     private FirebaseUser user;
     private boolean state;
+    public String phoneUniqueID;
 
-    private PhoneLocationTemp temp;
 
-
+    @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_phone_dashboard);
         registerPhone_registerOrUnregisterButton = findViewById(R.id.registerPhone_registerOrUnregisterButton);
-        track = new PhoneLocationTracker(this);
         user = FirebaseAuth.getInstance().getCurrentUser();
-        isActive = FirebaseDatabase.getInstance().getReference(user.getUid()).child("Phone 1");
-        temp = new PhoneLocationTemp(this);
+
+
+        phoneUniqueID = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+
+        isActive = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(phoneUniqueID);
+        registerPhone_registerOrUnregisterButton.setClickable(false);
         isActive.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     for (DataSnapshot data : snapshot.getChildren()) {
-
+                        state = data.getValue(Boolean.class);
+                        break;
                     }
                 }
+                registerPhone_registerOrUnregisterButton.setClickable(true);
+                phoneState();
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
-        phoneState();
     }
 
     private void phoneState() {
-        if (state) {
+        Intent serviceIntent = new Intent(this, PhoneLocationService.class);
+        serviceIntent.putExtra(REGISTERED, state);
+        serviceIntent.putExtra(LOG_IN_BUILD_EXTRA, phoneUniqueID);
+        if (!state) {
             //Phone is currently not registered
-//            track.stopTrack();
-            temp.stopUpdate();
-
+            startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_register));
         } else {
             //Phone is Registered
-//            track.startTrack();
-
-            temp.startUpdate();
+            startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_unregister));
         }
     }

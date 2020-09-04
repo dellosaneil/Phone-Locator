@@ -4,8 +4,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.WindowManager;
 import android.view.animation.Animation;
@@ -46,12 +48,12 @@ public class SplashScreen extends AppCompatActivity {
         splashScreen_text.setAnimation(animation);
         auth = FirebaseAuth.getInstance();
         loggedIn();
+
     }
 
     private void loggedIn() {
         if (auth.getCurrentUser() != null && auth.getCurrentUser().isEmailVerified()) {
             userID = auth.getCurrentUser().getUid();
-            Log.i(TAG, "loggedIn: " + userID);
             db = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(userID);
             db.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override

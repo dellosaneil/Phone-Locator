@@ -92,7 +92,6 @@ public class LogInActivity extends AppCompatActivity {
                 break;
             // unexpected exception,
             default:
-                Log.i(TAG, "exceptionError: " + errors);
                 Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show();
         }
     }
@@ -139,11 +138,12 @@ public class LogInActivity extends AppCompatActivity {
 
     public void redirectSignUp(View view) {
         Intent intent = new Intent(this, SignUpActivityOne.class);
-        Pair<View, String>[] pairs = new Pair[3];
-        pairs[0] = new Pair<>(logIn_logo, "log_in_transition_logo");
-        pairs[1] = new Pair<>(logInUser, "log_in_transition_button");
-        pairs[2] = new Pair<>(welcome_back_TV, "log_in_transition_text_view");
-        ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
-        startActivity(intent, option.toBundle());
+//        Pair<View, String>[] pairs = new Pair[3];
+//        pairs[0] = new Pair<>(logIn_logo, "log_in_transition_logo");
+//        pairs[1] = new Pair<>(logInUser, "log_in_transition_button");
+//        pairs[2] = new Pair<>(welcome_back_TV, "log_in_transition_text_view");
+//        ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
+//        startActivity(intent, option.toBundle());
+        startActivity(intent);
     }
 }

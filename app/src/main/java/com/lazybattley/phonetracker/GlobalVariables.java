@@ -29,9 +29,6 @@ public class GlobalVariables {
 
     public static final String CHANNEL_ID = "Notification";
 
-    public static final String PHONE_STATE = "state";
-
-
 //    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 //
 //    String dateString = formatter.format(new Date(1599262421155L));

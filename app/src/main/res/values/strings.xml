@@ -70,7 +70,7 @@
 
 <!--    Registered Phones RecyclerView Adapter-->
     <string name="registered_phone_battery_level">Battery Level:</string>
-    <string name="welcome_messages">Hello, %1$s! You have %2$d new messages.</string>
+    <string name="loading">Loading…</string>
 
 
 

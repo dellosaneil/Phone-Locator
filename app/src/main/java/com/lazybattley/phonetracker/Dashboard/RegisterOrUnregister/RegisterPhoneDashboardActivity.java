@@ -6,11 +6,14 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -49,17 +52,20 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     private List<Map<String, LatLng>> registeredPhoneDetails;
     private DatabaseReference phoneDetails;
     private List<Integer> batteryLevel;
-    private static final String TAG = "RegisterPhoneDashboardA";
-
+    private ProgressBar registerPhone_progressBar;
+    private CardView registerPhone_cardView;
 
     @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_phone_dashboard);
+        registerPhone_cardView = findViewById(R.id.registerPhone_cardView);
+        registerPhone_progressBar = findViewById(R.id.registerPhone_progressBar);
         registerPhone_phonesRegistered = findViewById(R.id.registerPhone_phonesRegistered);
         registerPhone_registerOrUnregisterButton = findViewById(R.id.registerPhone_registerOrUnregisterButton);
         registerPhone_isRegistered = findViewById(R.id.registerPhone_isRegistered);
+        hideViews();
         registeredPhoneDetails = new ArrayList<>();
         batteryLevel = new ArrayList<>();
         user = FirebaseAuth.getInstance().getCurrentUser();
@@ -72,9 +78,25 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
             registerPhone_isRegistered.setText(getString(R.string.register_or_unregister_currently_unregistered));
             registerPhone_isRegistered.setTextColor(Color.RED);
         }
+
         initRecyclerView();
         getCurrentStatus();
     }
+
+    private void hideViews() {
+        registerPhone_cardView.setVisibility(View.INVISIBLE);
+        registerPhone_registerOrUnregisterButton.setVisibility(View.INVISIBLE);
+        registerPhone_phonesRegistered.setVisibility(View.INVISIBLE);
+        registerPhone_progressBar.setVisibility(View.VISIBLE);
+    }
+
+    private void showViews(){
+        registerPhone_cardView.setVisibility(View.VISIBLE);
+        registerPhone_registerOrUnregisterButton.setVisibility(View.VISIBLE);
+        registerPhone_phonesRegistered.setVisibility(View.VISIBLE);
+        registerPhone_progressBar.setVisibility(View.INVISIBLE);
+    }
+
 
     private void getCurrentStatus() {
         isActive.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -95,6 +117,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
             }
         });
     }
+
     private void startLocationTrackingService() {
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
         serviceIntent.putExtra(REGISTERED, state);
@@ -108,46 +131,43 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
         }
     }
+
     public void changeState(View view) {
         state = !state;
         startLocationTrackingService();
     }
 
-    private void initRecyclerView(){
+    private void initRecyclerView() {
         phoneDetails = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
         phoneDetails.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if(snapshot.exists()){
-                    for(DataSnapshot details: snapshot.getChildren()){
+                if (snapshot.exists()) {
+                    for (DataSnapshot details : snapshot.getChildren()) {
                         Map<String, LatLng> tempMap = new HashMap<>();
                         PhoneTrackHelperClass s = details.getValue(PhoneTrackHelperClass.class);
                         LatLng temp = new LatLng(s.getLatitude(), s.getLongitude());
-                        String phoneModel  = s.getPhoneModel();
+                        String phoneModel = s.getPhoneModel();
                         int battery = s.getBatteryPercent();
                         tempMap.put(phoneModel, temp);
                         registeredPhoneDetails.add(tempMap);
                         batteryLevel.add(battery);
                     }
-                }else{
+                } else {
                     Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT).show();
                 }
-                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, registeredPhoneDetails,batteryLevel);
+                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, registeredPhoneDetails, batteryLevel);
                 registerPhone_phonesRegistered.setAdapter(adapter);
                 registerPhone_phonesRegistered.setLayoutManager(new LinearLayoutManager(RegisterPhoneDashboardActivity.this));
                 DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(registerPhone_phonesRegistered.getContext(),
                         new LinearLayoutManager(RegisterPhoneDashboardActivity.this).getOrientation());
                 registerPhone_phonesRegistered.addItemDecoration(dividerItemDecoration);
-
+                showViews();
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
+            public void onCancelled(@NonNull DatabaseError error) {}
         });
-
-
 
 
     }

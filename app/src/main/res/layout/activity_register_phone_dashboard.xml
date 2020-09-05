@@ -4,13 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity">
+    tools:context=".Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity"
+    android:id="@+id/constraintLayout">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/registerPhone_registerOrUnregisterButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="24dp"
         android:backgroundTint="@color/card1_color"
         android:onClick="changeState"
         android:textColor="@color/darkBlack"
@@ -23,7 +24,7 @@
         android:id="@+id/registerPhone_cardView"
         android:layout_width="250dp"
         android:layout_height="125dp"
-        android:layout_marginTop="68dp"
+        android:layout_marginTop="36dp"
         app:cardBackgroundColor="@color/snow"
         app:cardCornerRadius="20dp"
         app:cardElevation="5dp"
@@ -43,15 +44,31 @@
 
     </androidx.cardview.widget.CardView>
 
+
+    <ProgressBar
+        android:id="@+id/registerPhone_progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.417" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/registerPhone_phonesRegistered"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="64dp"
+        android:layout_marginTop="36dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/registerPhone_registerOrUnregisterButton" />
+        app:layout_constraintTop_toBottomOf="@+id/registerPhone_registerOrUnregisterButton"
+        app:layout_constraintVertical_bias="0.836" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

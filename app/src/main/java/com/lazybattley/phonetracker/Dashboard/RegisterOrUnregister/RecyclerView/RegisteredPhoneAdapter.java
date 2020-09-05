@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.location.Address;
 import android.location.Geocoder;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -44,23 +46,34 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
     public void onBindViewHolder(@NonNull RegisteredPhoneAdapter.RegisteredPhoneViewHolder holder, int position) {
         String phoneModel = null;
         LatLng location = null;
-        String address = null;
+        final String[] address = {null};
         for(String model : phoneDetails.get(position).keySet()){
             phoneModel = model;
             location = phoneDetails.get(position).get(phoneModel);
         }
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-        try{
-            List<Address> list = geocoder.getFromLocation(location.latitude, location.longitude, 1);
-            if(!list.isEmpty()){
-                address = list.get(0).getAddressLine(0);
+
+        final LatLng finalLocation = location;
+        final String finalPhoneModel = phoneModel;
+
+        new Thread(() -> {
+            try {
+                List<Address> list = geocoder.getFromLocation(finalLocation.latitude, finalLocation.longitude, 1);
+                if (!list.isEmpty()) {
+                    address[0] = list.get(0).getAddressLine(0);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        holder.registeredPhoneAdapter_phoneModel.setText(phoneModel);
-        holder.registeredPhoneAdapter_phoneLocation.setText(address);
-        holder.registeredPhoneAdapter_batteryLevel.setText(context.getText(R.string.registered_phone_battery_level) + " " + batteryLevel.get(position) + "%");
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    holder.registeredPhoneAdapter_phoneModel.setText(finalPhoneModel);
+                    holder.registeredPhoneAdapter_phoneLocation.setText(address[0]);
+                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getText(R.string.registered_phone_battery_level)+" "+batteryLevel.get(position)+"%");
+                }
+            });
+        }).start();
     }
 
     @Override

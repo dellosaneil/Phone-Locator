@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
+import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -104,6 +105,8 @@ public class PhoneLocationService extends Service {
         private Calendar calendar;
         private Date currentTime;
         private Date updatedAt;
+        private BatteryManager batteryManager;
+        private int batteryLevel;
 
 
         @Override
@@ -117,6 +120,7 @@ public class PhoneLocationService extends Service {
 
         public PhoneLocationTracker(Context context) {
             calendar = new GregorianCalendar(TIME_ZONE);
+            batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
             this.context = context;
             user = FirebaseAuth.getInstance().getCurrentUser();
             reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
@@ -134,7 +138,8 @@ public class PhoneLocationService extends Service {
                     calendar.setTime(currentTime);
                     updatedAt = calendar.getTime();
                     loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
-                    reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL, updatedAt.getTime()));
+                    batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                    reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL, updatedAt.getTime(), batteryLevel));
                     if (!state) {
                         stopUpdate();
                     }
@@ -162,7 +167,7 @@ public class PhoneLocationService extends Service {
 
         private void stopUpdate() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-            reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, false, BUILD_MODEL, updatedAt.getTime()));
+            reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, false, BUILD_MODEL, updatedAt.getTime(), batteryLevel));
         }
     }
 }

@@ -48,6 +48,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     private RecyclerView registerPhone_phonesRegistered;
     private List<Map<String, LatLng>> registeredPhoneDetails;
     private DatabaseReference phoneDetails;
+    private List<Integer> batteryLevel;
     private static final String TAG = "RegisterPhoneDashboardA";
 
 
@@ -60,6 +61,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         registerPhone_registerOrUnregisterButton = findViewById(R.id.registerPhone_registerOrUnregisterButton);
         registerPhone_isRegistered = findViewById(R.id.registerPhone_isRegistered);
         registeredPhoneDetails = new ArrayList<>();
+        batteryLevel = new ArrayList<>();
         user = FirebaseAuth.getInstance().getCurrentUser();
         isActive = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(BUILD_ID);
         registerPhone_registerOrUnregisterButton.setClickable(false);
@@ -122,13 +124,15 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
                         PhoneTrackHelperClass s = details.getValue(PhoneTrackHelperClass.class);
                         LatLng temp = new LatLng(s.getLatitude(), s.getLongitude());
                         String phoneModel  = s.getPhoneModel();
+                        int battery = s.getBatteryPercent();
                         tempMap.put(phoneModel, temp);
                         registeredPhoneDetails.add(tempMap);
+                        batteryLevel.add(battery);
                     }
                 }else{
                     Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT).show();
                 }
-                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, registeredPhoneDetails);
+                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, registeredPhoneDetails,batteryLevel);
                 registerPhone_phonesRegistered.setAdapter(adapter);
                 registerPhone_phonesRegistered.setLayoutManager(new LinearLayoutManager(RegisterPhoneDashboardActivity.this));
                 DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(registerPhone_phonesRegistered.getContext(),

@@ -11,17 +11,23 @@ public class PhoneTrackHelperClass {
     private boolean isActive;
     private String phoneModel;
     private long updatedAt;
+    private int batteryPercent;
 
 
-    public PhoneTrackHelperClass(LatLng location, boolean isActive, String phoneModel, long updatedAt) {
+    public PhoneTrackHelperClass(LatLng location, boolean isActive, String phoneModel, long updatedAt, int batteryPercent) {
         this.latitude = location.latitude;
         this.longitude = location.longitude;
         this.isActive = isActive;
         this.phoneModel = phoneModel;
         this.updatedAt = updatedAt;
+        this.batteryPercent = batteryPercent;
     }
 
     public PhoneTrackHelperClass() {}
+
+    public int getBatteryPercent() {
+        return batteryPercent;
+    }
 
     public long getUpdatedAt() {
         return updatedAt;

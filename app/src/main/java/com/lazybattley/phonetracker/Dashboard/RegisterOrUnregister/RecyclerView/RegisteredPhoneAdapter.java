@@ -1,6 +1,7 @@
 package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RecyclerView;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.location.Address;
 import android.location.Geocoder;
 import android.view.LayoutInflater;
@@ -23,11 +24,13 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
 
     private Context context;
     private List<Map<String, LatLng>> phoneDetails;
+    private List<Integer> batteryLevel;
 
 
-    public RegisteredPhoneAdapter(Context context, List<Map<String, LatLng>> phoneDetails) {
+    public RegisteredPhoneAdapter(Context context, List<Map<String, LatLng>> phoneDetails, List<Integer> batteryLevel) {
         this.context = context;
         this.phoneDetails = phoneDetails;
+        this.batteryLevel = batteryLevel;
     }
 
     @NonNull
@@ -57,6 +60,7 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
         }
         holder.registeredPhoneAdapter_phoneModel.setText(phoneModel);
         holder.registeredPhoneAdapter_phoneLocation.setText(address);
+        holder.registeredPhoneAdapter_batteryLevel.setText(context.getText(R.string.registered_phone_battery_level) + " " + batteryLevel.get(position) + "%");
     }
 
     @Override
@@ -71,11 +75,13 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
     public static class RegisteredPhoneViewHolder extends RecyclerView.ViewHolder {
         private TextView registeredPhoneAdapter_phoneModel;
         private TextView registeredPhoneAdapter_phoneLocation;
+        private TextView registeredPhoneAdapter_batteryLevel;
 
         public RegisteredPhoneViewHolder(@NonNull View itemView) {
             super(itemView);
             registeredPhoneAdapter_phoneModel = itemView.findViewById(R.id.registeredPhoneAdapter_phoneModel);
             registeredPhoneAdapter_phoneLocation = itemView.findViewById(R.id.registeredPhoneAdapter_phoneLocation);
+            registeredPhoneAdapter_batteryLevel = itemView.findViewById(R.id.registeredPhoneAdapter_batteryLevel);
         }
     }
 }

@@ -24,7 +24,7 @@
             android:elevation="10dp"
             android:onClick="mainDashboard_options"
             android:tag="register"
-            android:text="@string/main_dashboard_register_unregister_phone"
+            android:text="@string/main_dashboard_registered_devices"
             android:textColor="@color/darkBlack"
             app:cornerRadius="10dp" />
 

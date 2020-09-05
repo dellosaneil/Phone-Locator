@@ -6,26 +6,52 @@
     android:layout_height="match_parent"
     tools:context=".Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/registerPhone_registerOrUnregisterButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="36dp"
+        android:backgroundTint="@color/card1_color"
+        android:onClick="changeState"
+        android:textColor="@color/darkBlack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/registerPhone_cardView" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+    <androidx.cardview.widget.CardView
+        android:id="@+id/registerPhone_cardView"
+        android:layout_width="250dp"
+        android:layout_height="125dp"
+        android:layout_marginTop="68dp"
+        app:cardBackgroundColor="@color/snow"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/registerPhone_isRegistered"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_gravity="center"
+            android:text="@string/register_or_unregister_currently_unregistered"
+            android:textAlignment="center"
+            android:textSize="24sp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/registerPhone_registerOrUnregisterButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/card1_color"
-                android:onClick="changeState" />
+    </androidx.cardview.widget.CardView>
 
-        </LinearLayout>
-
-
-    </ScrollView>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/registerPhone_phonesRegistered"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="64dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/registerPhone_registerOrUnregisterButton" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

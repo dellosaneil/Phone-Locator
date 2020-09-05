@@ -11,12 +11,17 @@
     <string name="log_in_sign_up">Log In/Sign Up</string>
     <string name="find_phone">Find Lost Phone</string>
 
+<!--    Splash Screen-->
+    <string name="splash_screen_logging_in">Logging in as</string>
+
     <!--    Log In Activity-->
     <string name="sign_up"><u>Sign Up</u></string>
     <string name="log_in_verify">Verify your account</string>
     <string name="log_in_invalid_format">Invalid email format</string>
     <string name="log_in_user_not_found">User is not registered</string>
     <string name="log_in_incorrect_pass">Incorrect password</string>
+
+
     <!--    Sign Up Activity-->
     <string name="full_name">Enter Full Name</string>
     <string name="enter_email">Enter Email</string>
@@ -37,26 +42,33 @@
 
 
     <!--    Main Dashboard-->
-    <string name="main_dashboard_register_unregister_phone">Register/Unregister Phone</string>
+    <string name="main_dashboard_registered_devices">Registered Devices</string>
     <string name="main_dashboard_request_friend_location">Request Friend Location</string>
     <string name="main_dashboard_list_of_location">Go To Map</string>
     <string name="main_dashboard_settings">Settings</string>
 
 
-<!--    Register Or Unregister-->
-    <string name="register_or_unregister_register">Register Phone</string>
-    <string name="register_or_unregister_unregister">Unregister Phone</string>
+    <!--    Register Or Unregister-->
+    <string name="register_or_unregister_track_phone">Track Device</string>
+    <string name="register_or_unregister_untrack_phone">Remove Tracking</string>
+    <string name="register_or_unregister_currently_unregistered">Device is currently unregistered</string>
+    <string name="register_or_unregister_currently_registered">Device is registered</string>
+    <string name="register_or_unregister_unregister_device">Click here to Unregister Device</string>
+    <string name="register_or_unregister_register_device">Click here to Register Device</string>
 
 
-
-<!--    Image Descriptions-->
+    <!--    Image Descriptions-->
     <string name="logo_description">Logo of Application</string>
 
-<!--    Persistent Notification-->
+    <!--    Persistent Notification-->
     <string name="persistent_notification_some_string">Location saved</string>
 
-<!--    LocationTrackerService-->
-<string name="location_service_tracked">Location is being sent to database.</string>
+    <!--    LocationTrackerService-->
+    <string name="location_service_tracked">Location is being sent to database.</string>
     <string name="location_service_turned_on">Tracking On</string>
+
+
+
+
 
 </resources>

@@ -32,6 +32,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.lazybattley.phonetracker.R;
 
 import java.io.IOException;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -42,14 +45,15 @@ import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.LOG_IN_BUILD_EXTRA;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED;
+import static com.lazybattley.phonetracker.GlobalVariables.TIME_ZONE;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
+import static com.lazybattley.phonetracker.SplashScreen.BUILD_ID;
 
 public class PhoneLocationService extends Service {
 
     private PhoneLocationTracker locationTracker;
     private volatile static boolean state;
-    private static String buildID;
 
 
     public PhoneLocationService() {
@@ -64,7 +68,6 @@ public class PhoneLocationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         state = intent.getBooleanExtra(REGISTERED, false);
-        buildID = intent.getStringExtra(LOG_IN_BUILD_EXTRA);
         locationTracker = new PhoneLocationTracker(this);
         Thread thread = new Thread(locationTracker);
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
@@ -98,13 +101,13 @@ public class PhoneLocationService extends Service {
         private FirebaseUser user;
         private DatabaseReference reference;
         private LatLng loc;
-        private Toast toast;
-        private Geocoder geocoder;
-        private String address;
+        private Calendar calendar;
+        private Date currentTime;
+        private Date updatedAt;
+
 
         @Override
         public void run() {
-            Log.i(TAG, "run: " + state);
             if (state) {
                 startUpdate();
             } else {
@@ -113,41 +116,28 @@ public class PhoneLocationService extends Service {
         }
 
         public PhoneLocationTracker(Context context) {
+            calendar = new GregorianCalendar(TIME_ZONE);
             this.context = context;
             user = FirebaseAuth.getInstance().getCurrentUser();
             reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
             locationRequest = new LocationRequest();
             locationRequest.setInterval(3000);
             locationRequest.setFastestInterval(2000);
-            locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
             locationCallback = new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
+                    currentTime = new Date();
+                    calendar.setTime(currentTime);
+                    updatedAt = calendar.getTime();
                     loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
-                    reference.child(buildID).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL));
-                    if (toast != null) {
-                        toast.cancel();
-                    }
-                    geocoder = new Geocoder(context, Locale.getDefault());
-
-                    try {
-                        List<Address> list = geocoder.getFromLocation(loc.latitude, loc.longitude, 1);
-                        if(!list.isEmpty()){
-                            address = list.get(0).getAddressLine(0);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    toast = makeText(context, address, Toast.LENGTH_SHORT);
-                    toast.show();
+                    reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL, updatedAt.getTime()));
                     if (!state) {
                         stopUpdate();
                     }
-
                 }
             };
         }
@@ -166,14 +156,13 @@ public class PhoneLocationService extends Service {
                     } else {
                         stopUpdate();
                     }
-
                 }
             });
         }
 
         private void stopUpdate() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-            reference.child(buildID).setValue(new PhoneTrackHelperClass(loc, false, BUILD_MODEL));
+            reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, false, BUILD_MODEL, updatedAt.getTime()));
         }
     }
 }

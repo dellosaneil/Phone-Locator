@@ -15,10 +15,8 @@ import com.lazybattley.phonetracker.R;
 
 public class MainDashBoardActivity extends AppCompatActivity {
 
-    private static final String TAG = "MainDashBoardActivity";
+
     private MaterialButton mainDashBoard_register_unregister;
-
-
 
 
     @Override
@@ -29,10 +27,10 @@ public class MainDashBoardActivity extends AppCompatActivity {
     }
 
 
-    public void mainDashboard_options(View view){
+    public void mainDashboard_options(View view) {
         String clicked = view.getTag().toString();
 
-        switch(clicked){
+        switch (clicked) {
             case "register":
                 registerPhone();
                 break;
@@ -52,8 +50,8 @@ public class MainDashBoardActivity extends AppCompatActivity {
     }
 
 
-    private void registerPhone(){
-        Intent intent = new  Intent(this, RegisterPhoneDashboardActivity.class);
+    private void registerPhone() {
+        Intent intent = new Intent(this, RegisterPhoneDashboardActivity.class);
         Pair pair = new Pair(mainDashBoard_register_unregister, "transition_register_phone");
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, pair);
         startActivity(intent, options.toBundle());

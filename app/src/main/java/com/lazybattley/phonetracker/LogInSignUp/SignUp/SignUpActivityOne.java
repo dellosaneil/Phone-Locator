@@ -108,6 +108,7 @@ public class SignUpActivityOne extends AppCompatActivity {
                                             addNewUser(user.getEmail(), user.getUid(), fullName);
                                             editable();
                                             signUp_redirect();
+                                            finish();
                                         } else {
                                             signUp_email.setError(task1.getException().getMessage());
                                         }
@@ -127,6 +128,8 @@ public class SignUpActivityOne extends AppCompatActivity {
         String userInput = signUp_email.getEditText().getText().toString().trim();
         if (userInput.length() == 0) {
             signUp_email.setError(getResources().getText(R.string.missing_field));
+            signUp_progressBar.setVisibility(View.INVISIBLE);
+            editable();
             return null;
         } else {
             signUp_email.setErrorEnabled(false);
@@ -140,9 +143,13 @@ public class SignUpActivityOne extends AppCompatActivity {
         String userInput = signUp_password.getEditText().getText().toString().trim();
         if (userInput.length() == 0) {
             signUp_password.setError(getResources().getText(R.string.missing_field));
+            signUp_progressBar.setVisibility(View.INVISIBLE);
+            editable();
             return null;
         } else if (userInput.length() < 6) {
             signUp_password.setError(getResources().getText(R.string.password_length));
+            signUp_progressBar.setVisibility(View.INVISIBLE);
+            editable();
             return null;
         } else {
             signUp_password.setErrorEnabled(false);

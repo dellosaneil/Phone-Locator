@@ -6,7 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
@@ -33,8 +32,8 @@ public class LogInActivity extends AppCompatActivity {
     private TextInputLayout log_in_email, log_in_password;
     private ImageView logIn_logo;
     private FirebaseAuth auth;
-
-    private static final String TAG = "LogInActivity";
+    private Intent intent;
+    private Pair<View, String>[] pairs;
     private ProgressBar logIn_progressBar;
 
     @Override
@@ -42,12 +41,31 @@ public class LogInActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
         logInUser = findViewById(R.id.logInUser);
+        logIn_logo = findViewById(R.id.logIn_logo);
         welcome_back_TV = findViewById(R.id.welcome_back_TV);
+
+
+
+        new Thread(() -> {
+            intent = new Intent(this, SignUpActivityOne.class);
+            pairs = new Pair[3];
+            pairs[0] = new Pair<>(logIn_logo, "log_in_transition_logo");
+            pairs[1] = new Pair<>(logInUser, "log_in_transition_button");
+            pairs[2] = new Pair<>(welcome_back_TV, "log_in_transition_text_view");
+        }).start();
+
+
+
         log_in_email = findViewById(R.id.log_in_email);
         log_in_password = findViewById(R.id.log_in_password);
-        logIn_logo = findViewById(R.id.logIn_logo);
         logIn_progressBar = findViewById(R.id.logIn_progressBar);
         auth = FirebaseAuth.getInstance();
+
+
+
+
+
+
     }
 
     public void logInUser(View view) {
@@ -80,8 +98,8 @@ public class LogInActivity extends AppCompatActivity {
         }
     }
 
-    private void exceptionError(String errors){
-        switch(errors){
+    private void exceptionError(String errors) {
+        switch (errors) {
             //User is not registered
             case "There is no user record corresponding to this identifier. The user may have been deleted.":
                 log_in_email.setError(getText(R.string.log_in_user_not_found));
@@ -96,14 +114,12 @@ public class LogInActivity extends AppCompatActivity {
         }
     }
 
-    private void clearError(){
+    private void clearError() {
         log_in_email.setError(null);
         log_in_password.setError(null);
         log_in_email.setErrorEnabled(false);
         log_in_password.setErrorEnabled(false);
     }
-
-
 
 
     private String validateEmail() {
@@ -112,9 +128,11 @@ public class LogInActivity extends AppCompatActivity {
         Matcher matcher = validateEmail.matcher(email);
         if (email.length() == 0) {
             log_in_email.setError(getText(R.string.missing_field));
+            logIn_progressBar.setVisibility(View.INVISIBLE);
             return null;
         } else if (!matcher.find()) {
             log_in_email.setError(getText(R.string.log_in_invalid_format));
+            logIn_progressBar.setVisibility(View.INVISIBLE);
             return null;
         } else {
             log_in_email.setError(null);
@@ -127,6 +145,7 @@ public class LogInActivity extends AppCompatActivity {
         String password = log_in_password.getEditText().getText().toString().trim();
         if (password.length() == 0) {
             log_in_password.setError(getText(R.string.missing_field));
+            logIn_progressBar.setVisibility(View.INVISIBLE);
             return null;
         } else {
             log_in_password.setError(null);
@@ -137,13 +156,9 @@ public class LogInActivity extends AppCompatActivity {
 
 
     public void redirectSignUp(View view) {
-        Intent intent = new Intent(this, SignUpActivityOne.class);
-//        Pair<View, String>[] pairs = new Pair[3];
-//        pairs[0] = new Pair<>(logIn_logo, "log_in_transition_logo");
-//        pairs[1] = new Pair<>(logInUser, "log_in_transition_button");
-//        pairs[2] = new Pair<>(welcome_back_TV, "log_in_transition_text_view");
-//        ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
-//        startActivity(intent, option.toBundle());
-        startActivity(intent);
+            ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
+            startActivity(intent, option.toBundle());
+//            startActivity(intent);
+
     }
 }

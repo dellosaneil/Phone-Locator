@@ -92,7 +92,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:hint="@string/full_name"
-                    android:transitionName="log_in_transition_text_view"
                     app:counterMaxLength="40"
                     app:endIconMode="clear_text"
                     app:startIconDrawable="@drawable/full_name">
@@ -114,7 +113,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:hint="@string/enter_email"
-                    android:transitionName="log_in_transition_text_view"
                     app:endIconMode="clear_text"
                     app:startIconDrawable="@drawable/mail">
 
@@ -134,7 +132,6 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:hint="@string/enter_password"
-                    android:transitionName="log_in_transition_text_view"
                     app:passwordToggleEnabled="true"
                     app:startIconDrawable="@drawable/password">
 

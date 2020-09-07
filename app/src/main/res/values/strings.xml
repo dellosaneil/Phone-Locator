@@ -71,6 +71,7 @@
 <!--    Registered Phones RecyclerView Adapter-->
     <string name="registered_phone_battery_level">Battery Level:</string>
     <string name="loading">Loading…</string>
+    <string name="error_geolocation">Could not get the location… Refresh the page</string>
 
 
 

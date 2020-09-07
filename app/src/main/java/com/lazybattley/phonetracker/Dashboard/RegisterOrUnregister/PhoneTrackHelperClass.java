@@ -2,8 +2,6 @@ package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
 import com.google.android.gms.maps.model.LatLng;
 
-import java.util.Date;
-
 public class PhoneTrackHelperClass {
 
     private double latitude;

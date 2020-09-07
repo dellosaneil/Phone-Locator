@@ -52,6 +52,7 @@
             android:elevation="10dp"
             android:onClick="mainDashboard_options"
             android:tag="map"
+
             android:text="@string/main_dashboard_list_of_location"
             android:textColor="@color/darkBlack"
             app:cornerRadius="10dp" />
@@ -75,8 +76,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#00000000"
-            android:onClick="logout"
-            android:text="Button" />
+            android:onClick="logout"/>
 
 
     </LinearLayout>

@@ -1,10 +1,14 @@
 package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -13,7 +17,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
-import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,6 +32,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity;
 import com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RecyclerView.RegisteredPhoneAdapter;
 import com.lazybattley.phonetracker.R;
 
@@ -35,11 +41,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.lazybattley.phonetracker.GlobalVariables.IS_ACTIVE;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
-import static com.lazybattley.phonetracker.SplashScreen.ALREADY_REGISTERED;
-import static com.lazybattley.phonetracker.SplashScreen.BUILD_ID;
 
 public class RegisterPhoneDashboardActivity extends AppCompatActivity {
 
@@ -54,12 +59,20 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     private List<Integer> batteryLevel;
     private ProgressBar registerPhone_progressBar;
     private CardView registerPhone_cardView;
+    public static final String PHONE_REGISTRATION = "isRegistered";
+    private SharedPreferences preferences;
+    private boolean isRegistered;
+    private String buildId;
+    public static final String BUILD_ID = "buildId";
 
     @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_phone_dashboard);
+        buildId = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        isRegistered();
+        requestPermission();
         registerPhone_cardView = findViewById(R.id.registerPhone_cardView);
         registerPhone_progressBar = findViewById(R.id.registerPhone_progressBar);
         registerPhone_phonesRegistered = findViewById(R.id.registerPhone_phonesRegistered);
@@ -68,19 +81,27 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         hideViews();
         registeredPhoneDetails = new ArrayList<>();
         batteryLevel = new ArrayList<>();
-        user = FirebaseAuth.getInstance().getCurrentUser();
-        isActive = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(BUILD_ID);
-        registerPhone_registerOrUnregisterButton.setClickable(false);
-        if (ALREADY_REGISTERED) {
-            registerPhone_isRegistered.setText(getString(R.string.register_or_unregister_currently_registered));
+        user = FirebaseAuth.getInstance().getCurrentUser();             // gets the current user
+        isActive = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(buildId);    //checks whether the user is tracking the device
+        cardViewRegistration();         //checks whether the device is registered.
+        initRecyclerView();             //initialize the recyclerview
+        getCurrentStatus();             //checks if the phone is actively tracked.
+    }
+
+    private void cardViewRegistration() {
+        if (isRegistered) {
+            registerPhone_isRegistered.setText(getText(R.string.register_or_unregister_currently_registered));
             registerPhone_isRegistered.setTextColor(Color.BLACK);
         } else {
-            registerPhone_isRegistered.setText(getString(R.string.register_or_unregister_currently_unregistered));
+            registerPhone_isRegistered.setText(getText(R.string.register_or_unregister_currently_unregistered));
             registerPhone_isRegistered.setTextColor(Color.RED);
+            registerPhone_registerOrUnregisterButton.setText(getText(R.string.register_or_unregister_register_device));
         }
+    }
 
-        initRecyclerView();
-        getCurrentStatus();
+    private void isRegistered() {
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        isRegistered = preferences.getBoolean(PHONE_REGISTRATION, false);
     }
 
     private void hideViews() {
@@ -90,51 +111,65 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         registerPhone_progressBar.setVisibility(View.VISIBLE);
     }
 
-    private void showViews(){
+    private void showViews() {
         registerPhone_cardView.setVisibility(View.VISIBLE);
         registerPhone_registerOrUnregisterButton.setVisibility(View.VISIBLE);
         registerPhone_phonesRegistered.setVisibility(View.VISIBLE);
         registerPhone_progressBar.setVisibility(View.INVISIBLE);
     }
 
-
     private void getCurrentStatus() {
-        isActive.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    for (DataSnapshot data : snapshot.getChildren()) {
-                        state = data.getValue(Boolean.class);
-                        break;
+        if (isRegistered) {
+            isActive.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        for (DataSnapshot data : snapshot.getChildren()) {
+                            state = data.getValue(Boolean.class);
+                            break;
+                        }
                     }
+                    startLocationTrackingService();
                 }
-                registerPhone_registerOrUnregisterButton.setClickable(true);
-                startLocationTrackingService();
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-            }
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                }
+            });
+        }
     }
 
     private void startLocationTrackingService() {
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
         serviceIntent.putExtra(REGISTERED, state);
+        serviceIntent.putExtra(BUILD_ID, buildId);
         if (!state) {
             //Phone is currently not registered
             startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
+            DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(buildId);
+            Map<String, Object> hopperUpdates = new HashMap<>();
+            hopperUpdates.put(IS_ACTIVE, false);
+            update.updateChildren(hopperUpdates);
         } else {
-            //Phone is Registered
+            //Phone is currently Registered
             startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
         }
     }
 
     public void changeState(View view) {
-        state = !state;
-        startLocationTrackingService();
+        if (!isRegistered) {
+            isRegistered = true;
+            cardViewRegistration();
+            SharedPreferences.Editor editor = preferences.edit();
+            registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
+            editor.putBoolean(PHONE_REGISTRATION, true);
+            editor.apply();
+        } else {
+            state = !state;
+            startLocationTrackingService();
+        }
     }
 
     private void initRecyclerView() {
@@ -166,11 +201,33 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
         });
 
 
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        startActivity(new Intent(this, MainDashBoardActivity.class));
+    }
 
+
+    private void requestPermission(){
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode == 1 && grantResults[0] != PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(this, "Cannot use application without permission.", Toast.LENGTH_LONG).show();
+            onBackPressed();
+            finish();
+        }
+    }
 }

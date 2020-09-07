@@ -19,6 +19,7 @@
             android:layout_width="275dp"
             android:layout_height="150dp"
             android:layout_marginTop="64dp"
+            android:clickable="true"
             android:transitionName="log_in_transition_button"
             app:cardBackgroundColor="@color/card1_color"
             app:cardCornerRadius="5dp"

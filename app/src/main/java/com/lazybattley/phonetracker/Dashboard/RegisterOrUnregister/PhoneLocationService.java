@@ -28,27 +28,19 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.lazybattley.phonetracker.R;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
+import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.BUILD_ID;
 import static com.lazybattley.phonetracker.GlobalVariables.BUILD_MODEL;
-import static com.lazybattley.phonetracker.GlobalVariables.CHANNEL_ID;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED;
-import static com.lazybattley.phonetracker.GlobalVariables.TIME_ZONE;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
-import static com.lazybattley.phonetracker.SplashScreen.BUILD_ID;
+import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service {
 
     private PhoneLocationTracker locationTracker;
     private volatile static boolean state;
-
-
-//    public PhoneLocationService() {}
 
     @Nullable
     @Override
@@ -59,7 +51,8 @@ public class PhoneLocationService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         state = intent.getBooleanExtra(REGISTERED, false);
-        locationTracker = new PhoneLocationTracker(this);
+        String buildId = intent.getStringExtra(BUILD_ID);
+        locationTracker = new PhoneLocationTracker(this, buildId);
         Thread thread = new Thread(locationTracker);
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, LOCATION_REQUEST_CODE, notificationIntent, 0);
@@ -103,14 +96,14 @@ public class PhoneLocationService extends Service {
             }
         }
 
-        public PhoneLocationTracker(Context context) {
+        public PhoneLocationTracker(Context context, String buildId) {
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
             this.context = context;
             user = FirebaseAuth.getInstance().getCurrentUser();
             reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
             locationRequest = new LocationRequest();
-            locationRequest.setInterval(60000);
-            locationRequest.setFastestInterval(45000);
+            locationRequest.setInterval(3000);
+            locationRequest.setFastestInterval(2500);
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
@@ -118,12 +111,13 @@ public class PhoneLocationService extends Service {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
-                    updatedAt = System.currentTimeMillis();
-                    loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
-                    batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-                    reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL, updatedAt, batteryLevel));
                     if (!state) {
                         stopUpdate();
+                    }else{
+                        updatedAt = System.currentTimeMillis();
+                        loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
+                        batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+                        reference.child(buildId).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL, updatedAt, batteryLevel));
                     }
                 }
             };
@@ -147,9 +141,10 @@ public class PhoneLocationService extends Service {
             });
         }
 
+
         private void stopUpdate() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
-            reference.child(BUILD_ID).setValue(new PhoneTrackHelperClass(loc, false, BUILD_MODEL, updatedAt, batteryLevel));
         }
     }
+
 }

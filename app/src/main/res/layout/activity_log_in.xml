@@ -59,7 +59,7 @@
                     app:layout_constraintHorizontal_bias="0.875"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/welcome_back_TV"
-                    app:startIconDrawable="@drawable/user">
+                    app:startIconDrawable="@drawable/ic_log_in_user">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
@@ -81,7 +81,7 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/log_in_email"
                     app:passwordToggleEnabled="true"
-                    app:startIconDrawable="@drawable/password">
+                    app:startIconDrawable="@drawable/ic_log_in_padlock">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"

@@ -16,8 +16,8 @@ import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
 public class OptionsScreen extends AppCompatActivity {
 
 
-    private ImageView user_log_in_image, user_search_phone_image;
-    private TextView user_log_in_text_view, user_search_phone_text_view;
+    private ImageView user_log_in_image;
+    private TextView user_log_in_text_view;
     private CardView logInSignUp;
     private Intent intent;
     private Pair<View, String>[] pairs;
@@ -28,9 +28,7 @@ public class OptionsScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_options_screen);
         user_log_in_image = findViewById(R.id.user_log_in_image);
-        user_search_phone_image = findViewById(R.id.user_search_phone_image);
         user_log_in_text_view = findViewById(R.id.user_log_in_text_view);
-        user_search_phone_text_view = findViewById(R.id.user_search_phone_text_view);
         logInSignUp = findViewById(R.id.logInSignUp);
 
         intent = new Intent(this, LogInActivity.class);
@@ -46,8 +44,6 @@ public class OptionsScreen extends AppCompatActivity {
     public void redirect(View view) {
         String tag = view.getTag().toString();
         if (tag.equals("1")) {
-
-
             ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
             startActivity(intent, option.toBundle());
 //            startActivity(intent);

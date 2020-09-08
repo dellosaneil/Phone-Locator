@@ -62,7 +62,7 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
                     address[0] = list.get(0).getAddressLine(0);
                 }
             } catch (IOException e) {
-                address[0] = String.valueOf(R.string.error_geolocation);
+                address[0] = R.string.error_geolocation + "";
             }
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override

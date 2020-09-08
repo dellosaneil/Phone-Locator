@@ -33,11 +33,12 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".Dashboard.RegisterOrUnregister.PhoneLocationService" />
-
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
+
+        <service android:name=".Dashboard.RegisterOrUnregister.PhoneLocationService" />
+
     </application>
 
 </manifest>

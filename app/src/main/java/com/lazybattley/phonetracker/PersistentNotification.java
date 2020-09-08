@@ -24,9 +24,13 @@ public class PersistentNotification extends Application {
                     NotificationManager.IMPORTANCE_DEFAULT
             );
             Log.i("", "notificationChannel: " );
-
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
         }
     }
+
+
+
 }
+
+

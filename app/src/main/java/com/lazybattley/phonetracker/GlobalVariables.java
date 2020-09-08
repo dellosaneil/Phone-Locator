@@ -5,7 +5,7 @@ import android.os.Build;
 public class GlobalVariables {
 
 
-    public static final String REGISTERED = "isRegistered";
+    public static final String STATE = "isRegistered";
     public static final String USERS_REFERENCE = "users";
     public static final String USER_DETAILS = "user_detail";
     public static final String USER_PHONES = "registered_devices";

@@ -11,10 +11,12 @@ import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.os.HandlerCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -28,19 +30,33 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.lazybattley.phonetracker.R;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.BUILD_ID;
 import static com.lazybattley.phonetracker.GlobalVariables.BUILD_MODEL;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
-import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED;
+import static com.lazybattley.phonetracker.GlobalVariables.STATE;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
 import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service {
 
-    private PhoneLocationTracker locationTracker;
     private volatile static boolean state;
+    private ExecutorService executorService;
+    private Handler handler;
+
+    private static final String TAG = "PhoneLocationService";
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        executorService = Executors.newFixedThreadPool(1);
+        handler = HandlerCompat.createAsync(Looper.getMainLooper());
+    }
 
     @Nullable
     @Override
@@ -50,10 +66,9 @@ public class PhoneLocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        state = intent.getBooleanExtra(REGISTERED, false);
+        state = intent.getBooleanExtra(STATE, false);
         String buildId = intent.getStringExtra(BUILD_ID);
-        locationTracker = new PhoneLocationTracker(this, buildId);
-        Thread thread = new Thread(locationTracker);
+        PhoneLocationTracker locationTracker = new PhoneLocationTracker(this, buildId, executorService, handler);
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, LOCATION_REQUEST_CODE, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -64,27 +79,32 @@ public class PhoneLocationService extends Service {
                 .build();
         startForeground(LOCATION_REQUEST_FOREGROUND_CODE, notification);
         if (state) {
-            thread.start();
+            locationTracker.runThread();
         } else {
             state = false;
             stopSelf();
+            executorService.shutdownNow();
             stopForeground(true);
         }
         return START_NOT_STICKY;
     }
 
 
+//************************************************************************************************************************************************************
+
     public static class PhoneLocationTracker implements Runnable {
         private FusedLocationProviderClient fusedLocationProviderClient;
         private LocationRequest locationRequest;
         private Context context;
         private LocationCallback locationCallback;
-        private FirebaseUser user;
         private DatabaseReference reference;
         private LatLng loc;
         private BatteryManager batteryManager;
         private int batteryLevel;
         private long updatedAt;
+        private Executor executor;
+        private Handler handler;
+        private String buildId;
 
 
         @Override
@@ -96,24 +116,36 @@ public class PhoneLocationService extends Service {
             }
         }
 
-        public PhoneLocationTracker(Context context, String buildId) {
-            batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        public void runThread() {
+            executor.execute(this);
+        }
+
+
+        public PhoneLocationTracker(Context context, String buildId, Executor executor, Handler handler) {
+            this.executor = executor;
+            this.handler = handler;
             this.context = context;
-            user = FirebaseAuth.getInstance().getCurrentUser();
+            this.buildId = buildId;
+            batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
             locationRequest = new LocationRequest();
             locationRequest.setInterval(3000);
             locationRequest.setFastestInterval(2500);
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+            callback();
+        }
 
+
+        private void callback(){
             locationCallback = new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
                     if (!state) {
                         stopUpdate();
-                    }else{
+                    } else {
                         updatedAt = System.currentTimeMillis();
                         loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
                         batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
@@ -125,22 +157,18 @@ public class PhoneLocationService extends Service {
 
 
         private void startUpdate() {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    if (state) {
-                        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-                    } else {
-                        stopUpdate();
-                    }
+            handler.post(() -> {
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                        ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                if (state) {
+                    fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+                } else {
+                    stopUpdate();
                 }
             });
         }
-
 
         private void stopUpdate() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);

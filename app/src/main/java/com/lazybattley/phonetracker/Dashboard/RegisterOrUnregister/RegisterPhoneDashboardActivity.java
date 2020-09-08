@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.lazybattley.phonetracker.GlobalVariables.IS_ACTIVE;
-import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED;
+import static com.lazybattley.phonetracker.GlobalVariables.STATE;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
 
@@ -141,10 +141,10 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
 
     private void startLocationTrackingService() {
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
-        serviceIntent.putExtra(REGISTERED, state);
+        serviceIntent.putExtra(STATE, state);
         serviceIntent.putExtra(BUILD_ID, buildId);
         if (!state) {
-            //Phone is currently not registered
+            //Phone is currently not tracked
             startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
             DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(buildId);
@@ -152,7 +152,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
             hopperUpdates.put(IS_ACTIVE, false);
             update.updateChildren(hopperUpdates);
         } else {
-            //Phone is currently Registered
+            //Phone is currently tracked
             startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
         }

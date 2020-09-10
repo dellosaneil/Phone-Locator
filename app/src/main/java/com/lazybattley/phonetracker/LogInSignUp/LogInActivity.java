@@ -20,7 +20,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity;
-import com.lazybattley.phonetracker.LogInSignUp.SignUp.SignUpActivityOne;
 import com.lazybattley.phonetracker.R;
 
 import java.util.regex.Matcher;
@@ -44,8 +43,6 @@ public class LogInActivity extends AppCompatActivity {
         logIn_logo = findViewById(R.id.logIn_logo);
         welcome_back_TV = findViewById(R.id.welcome_back_TV);
 
-
-
         new Thread(() -> {
             intent = new Intent(this, SignUpActivityOne.class);
             pairs = new Pair[3];
@@ -54,17 +51,10 @@ public class LogInActivity extends AppCompatActivity {
             pairs[2] = new Pair<>(welcome_back_TV, "log_in_transition_text_view");
         }).start();
 
-
-
         log_in_email = findViewById(R.id.log_in_email);
         log_in_password = findViewById(R.id.log_in_password);
         logIn_progressBar = findViewById(R.id.logIn_progressBar);
         auth = FirebaseAuth.getInstance();
-
-
-
-
-
 
     }
 

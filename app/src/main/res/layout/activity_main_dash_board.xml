@@ -4,19 +4,39 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Dashboard.MainDashBoardActivity"
-    android:background="@color/snow">
+    android:background="@color/snow"
+    android:elevation="0dp"
+    tools:context=".Dashboard.MainDashBoardActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_margin="35dp"
-        android:padding="35dp">
+        android:orientation="vertical"
+        android:padding="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="75dp">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/mainDashboard_notificationButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:clickable="true"
+                android:focusable="true"
+                android:foregroundGravity="center"
+                android:outlineProvider="none"
+                app:backgroundTint="#00000000"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_bell" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/mainDashBoard_register_unregister"
-            android:transitionName="transition_register_phone"
             android:layout_width="250dp"
             android:layout_height="110dp"
             android:layout_gravity="center"
@@ -26,6 +46,7 @@
             android:tag="register"
             android:text="@string/main_dashboard_registered_devices"
             android:textColor="@color/darkBlack"
+            android:transitionName="transition_register_phone"
             app:cornerRadius="10dp" />
 
         <com.google.android.material.button.MaterialButton
@@ -76,11 +97,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#00000000"
-            android:onClick="logout"/>
+            android:onClick="logout" />
 
 
     </LinearLayout>
-
 
 
 </ScrollView>

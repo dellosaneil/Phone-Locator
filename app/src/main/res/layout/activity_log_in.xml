@@ -5,6 +5,7 @@
     android:id="@+id/signUp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/snow"
     tools:context=".LogInSignUp.LogInActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -105,18 +106,19 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/log_in_password" />
 
-                <TextView
-                    android:id="@+id/signUpTextView"
+                <com.google.android.material.button.MaterialButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:clickable="true"
                     android:onClick="redirectSignUp"
+                    android:background="#00000000"
+                    android:layout_marginTop="4dp"
                     android:text="@string/sign_up"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:padding="2dp"
                     android:textColor="#0000EE"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/logInUser"
-                    android:focusable="true" />
+                    app:layout_constraintEnd_toEndOf="@+id/logInUser"
+                    app:layout_constraintTop_toBottomOf="@+id/logInUser" />
 
                 <ProgressBar
                     android:id="@+id/logIn_progressBar"
@@ -145,7 +147,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/app_logo" />
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -33,7 +34,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity;
-import com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RecyclerView.RegisteredPhoneAdapter;
+import com.lazybattley.phonetracker.RecyclerViewAdapters.RegisteredPhoneAdapter;
+import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.GlobalVariables.IS_ACTIVE;
 import static com.lazybattley.phonetracker.GlobalVariables.STATE;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
@@ -54,7 +57,8 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     private boolean state;
     private TextView registerPhone_isRegistered;
     private RecyclerView registerPhone_phonesRegistered;
-    private List<Map<String, LatLng>> registeredPhoneDetails;
+    private List<String> phoneModel;
+    private List<LatLng> coordinates;
     private DatabaseReference phoneDetails;
     private List<Integer> batteryLevel;
     private ProgressBar registerPhone_progressBar;
@@ -79,10 +83,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         registerPhone_registerOrUnregisterButton = findViewById(R.id.registerPhone_registerOrUnregisterButton);
         registerPhone_isRegistered = findViewById(R.id.registerPhone_isRegistered);
         hideViews();
-        registeredPhoneDetails = new ArrayList<>();
+        phoneModel = new ArrayList<>();
+        coordinates = new ArrayList<>();
         batteryLevel = new ArrayList<>();
         user = FirebaseAuth.getInstance().getCurrentUser();             // gets the current user
-        isActive = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(buildId);    //checks whether the user is tracking the device
+        isActive = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(ENCODED_EMAIL).child(USER_PHONES).child(buildId);    //checks whether the user is tracking the device
         cardViewRegistration();         //checks whether the device is registered.
         initRecyclerView();             //initialize the recyclerview
         getCurrentStatus();             //checks if the phone is actively tracked.
@@ -143,11 +148,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
         serviceIntent.putExtra(STATE, state);
         serviceIntent.putExtra(BUILD_ID, buildId);
+        Log.i("", "startLocationTrackingService: " + state);
         if (!state) {
             //Phone is currently not tracked
             startService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
-            DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES).child(buildId);
+            DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(ENCODED_EMAIL).child(USER_PHONES).child(buildId);
             Map<String, Object> hopperUpdates = new HashMap<>();
             hopperUpdates.put(IS_ACTIVE, false);
             update.updateChildren(hopperUpdates);
@@ -173,25 +179,24 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     }
 
     private void initRecyclerView() {
-        phoneDetails = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
+        phoneDetails = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(ENCODED_EMAIL).child(USER_PHONES);
         phoneDetails.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     for (DataSnapshot details : snapshot.getChildren()) {
-                        Map<String, LatLng> tempMap = new HashMap<>();
                         PhoneTrackHelperClass s = details.getValue(PhoneTrackHelperClass.class);
                         LatLng temp = new LatLng(s.getLatitude(), s.getLongitude());
-                        String phoneModel = s.getPhoneModel();
+                        String model = s.getPhoneModel();
                         int battery = s.getBatteryPercent();
-                        tempMap.put(phoneModel, temp);
-                        registeredPhoneDetails.add(tempMap);
+                        coordinates.add(temp);
+                        phoneModel.add(model);
                         batteryLevel.add(battery);
                     }
                 } else {
                     Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT).show();
                 }
-                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, registeredPhoneDetails, batteryLevel);
+                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, phoneModel, coordinates, batteryLevel);
                 registerPhone_phonesRegistered.setAdapter(adapter);
                 registerPhone_phonesRegistered.setLayoutManager(new LinearLayoutManager(RegisterPhoneDashboardActivity.this));
                 DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(registerPhone_phonesRegistered.getContext(),

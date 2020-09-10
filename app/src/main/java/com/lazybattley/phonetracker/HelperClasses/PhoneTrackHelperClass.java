@@ -1,4 +1,4 @@
-package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
+package com.lazybattley.phonetracker.HelperClasses;
 
 import com.google.android.gms.maps.model.LatLng;
 

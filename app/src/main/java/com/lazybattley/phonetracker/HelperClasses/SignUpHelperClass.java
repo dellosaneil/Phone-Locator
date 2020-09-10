@@ -1,4 +1,4 @@
-package com.lazybattley.phonetracker.LogInSignUp.SignUp;
+package com.lazybattley.phonetracker.HelperClasses;
 
 public class SignUpHelperClass {
 

@@ -11,7 +11,6 @@ import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -24,16 +23,16 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.BUILD_ID;
 import static com.lazybattley.phonetracker.GlobalVariables.BUILD_MODEL;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
@@ -48,8 +47,6 @@ public class PhoneLocationService extends Service {
     private volatile static boolean state;
     private ExecutorService executorService;
     private Handler handler;
-
-    private static final String TAG = "PhoneLocationService";
 
     @Override
     public void onCreate() {
@@ -86,7 +83,7 @@ public class PhoneLocationService extends Service {
             executorService.shutdownNow();
             stopForeground(true);
         }
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
 
@@ -127,8 +124,7 @@ public class PhoneLocationService extends Service {
             this.context = context;
             this.buildId = buildId;
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(user.getUid()).child(USER_PHONES);
+            reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(ENCODED_EMAIL).child(USER_PHONES);
             locationRequest = new LocationRequest();
             locationRequest.setInterval(3000);
             locationRequest.setFastestInterval(2500);

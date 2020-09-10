@@ -17,6 +17,11 @@ public class GlobalVariables {
     public static final int LOCATION_REQUEST_CODE = 1;
     public static final int LOCATION_REQUEST_FOREGROUND_CODE = 9;
 
+    public static final String REQUEST_PERMISSION_TO_ACCESS_LOCATION = "pending_requests";
+    public static final String REQUEST_PERMISSION_LIST_OF_REQUESTS = "sent_requests";
+
+
+
 
 //    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 //

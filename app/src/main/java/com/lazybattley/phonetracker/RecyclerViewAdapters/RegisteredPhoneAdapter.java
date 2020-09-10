@@ -1,4 +1,4 @@
-package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RecyclerView;
+package com.lazybattley.phonetracker.RecyclerViewAdapters;
 
 import android.content.Context;
 import android.location.Address;
@@ -19,18 +19,20 @@ import com.lazybattley.phonetracker.R;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
-public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhoneAdapter.RegisteredPhoneViewHolder> {
+public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhoneAdapter.RegisteredPhoneViewHolder>{
 
     private Context context;
-    private List<Map<String, LatLng>> phoneDetails;
+    private List<String> model;
+    private List<LatLng> coordinates;
     private List<Integer> batteryLevel;
 
 
-    public RegisteredPhoneAdapter(Context context, List<Map<String, LatLng>> phoneDetails, List<Integer> batteryLevel) {
+
+    public RegisteredPhoneAdapter(Context context, List<String> model, List<LatLng> coordinates , List<Integer> batteryLevel) {
         this.context = context;
-        this.phoneDetails = phoneDetails;
+        this.model = model;
+        this.coordinates = coordinates;
         this.batteryLevel = batteryLevel;
     }
 
@@ -43,13 +45,10 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
 
     @Override
     public void onBindViewHolder(@NonNull RegisteredPhoneAdapter.RegisteredPhoneViewHolder holder, int position) {
-        String phoneModel = null;
-        LatLng location = null;
+        String phoneModel = model.get(position);
+        LatLng location = coordinates.get(position);
         final String[] address = {null};
-        for(String model : phoneDetails.get(position).keySet()){
-            phoneModel = model;
-            location = phoneDetails.get(position).get(phoneModel);
-        }
+
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
 
         final LatLng finalLocation = location;
@@ -62,7 +61,7 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
                     address[0] = list.get(0).getAddressLine(0);
                 }
             } catch (IOException e) {
-                address[0] = R.string.error_geolocation + "";
+                address[0] = "Error: Reload Page";
             }
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
@@ -75,12 +74,13 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
         }).start();
     }
 
+
     @Override
     public int getItemCount() {
-        if(phoneDetails == null){
+        if(model == null){
             return 0;
         }
-        return phoneDetails.size();
+        return model.size();
     }
 
 

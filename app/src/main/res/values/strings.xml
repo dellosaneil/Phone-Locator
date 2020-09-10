@@ -11,7 +11,7 @@
     <string name="log_in_sign_up">Log In/Sign Up</string>
     <string name="find_phone">Find Lost Phone</string>
 
-<!--    Splash Screen-->
+    <!--    Splash Screen-->
     <string name="splash_screen_logging_in">Logging in as</string>
 
     <!--    Log In Activity-->
@@ -27,7 +27,7 @@
     <string name="enter_email">Enter Email</string>
     <string name="create_account">Create Account</string>
     <string name="signUp">Sign Up</string>
-    <string name="sign_up_enter_number">Enter Phone No.</string>
+    <string name="sign_up_enter_username">Enter Username</string>
 
 
     <!--    Error Messages-->
@@ -68,10 +68,26 @@
     <string name="location_service_turned_on">Tracking On</string>
 
 
-<!--    Registered Phones RecyclerView Adapter-->
+    <!--    Registered Phones RecyclerView Adapter-->
     <string name="registered_phone_battery_level">Battery Level:</string>
     <string name="loading">Loading…</string>
     <string name="error_geolocation">Could not get the location… Refresh the page</string>
+
+
+<!--    Request location of Friend-->
+    <string name="request_location_username">Enter Friends\' Email</string>
+    <string name="request_location_message">Send a message…</string>
+
+
+
+
+
+
+
+
+
+
+
 
 
 

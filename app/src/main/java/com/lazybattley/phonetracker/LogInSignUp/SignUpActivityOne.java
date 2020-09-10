@@ -1,6 +1,4 @@
-package com.lazybattley.phonetracker.LogInSignUp.SignUp;
-
-import androidx.appcompat.app.AppCompatActivity;
+package com.lazybattley.phonetracker.LogInSignUp;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,13 +8,15 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
+import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
@@ -75,6 +75,7 @@ public class SignUpActivityOne extends AppCompatActivity {
         finish();
     }
 
+
     private String validateFullName() {
         String userInput = signUp_fullName.getEditText().getText().toString().trim();
         if (userInput.length() == 0) {
@@ -104,8 +105,8 @@ public class SignUpActivityOne extends AppCompatActivity {
                             user.sendEmailVerification()
                                     .addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
-                                            Toast.makeText(SignUpActivityOne.this, "New account created, Check email for verification", Toast.LENGTH_LONG).show();
-                                            addNewUser(user.getEmail(), user.getUid(), fullName);
+                                            Toast.makeText(SignUpActivityOne.this, "Account Successfully Created, Verify Email", Toast.LENGTH_LONG).show();
+                                            addNewUser(user.getEmail(), encodeEmail(user.getEmail()), fullName);
                                             editable();
                                             signUp_redirect();
                                             finish();
@@ -159,10 +160,14 @@ public class SignUpActivityOne extends AppCompatActivity {
     }
 
 
-
     //Adds new user in the database
-    private void addNewUser(String username, String uid, String fullName) {
-        reference.child(uid).child(USER_DETAILS).setValue(new SignUpHelperClass(uid, username, fullName));
+    private void addNewUser(String email, String childReference, String fullName) {
+        reference.child(childReference).child(USER_DETAILS).setValue(new SignUpHelperClass(childReference, email, fullName));
+    }
+
+
+    private String encodeEmail(String email) {
+        return email.replace(".", ",");
     }
 
 

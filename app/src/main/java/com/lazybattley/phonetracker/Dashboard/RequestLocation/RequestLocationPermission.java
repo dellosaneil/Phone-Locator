@@ -2,14 +2,28 @@ package com.lazybattley.phonetracker.Dashboard.RequestLocation;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.HelperClasses.RequestLocationHelperClass;
 import com.lazybattley.phonetracker.R;
+import com.lazybattley.phonetracker.RecyclerViewAdapters.RequestLocationAdapter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_LIST_OF_REQUESTS;
 import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_TO_ACCESS_LOCATION;
@@ -18,30 +32,115 @@ import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
 public class RequestLocationPermission extends AppCompatActivity {
 
     private TextInputLayout requestLocation_friendEmail;
+    private boolean isUser;
+    private RecyclerView requestLocation_sentRequests;
+    private List<RequestLocationHelperClass> sentRequests;
+    private String currentUser;
+    private DatabaseReference reference;
+    private Toast toast;
+    public static final String TIME_SENT = "timeSent";
+    private LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_request_location_permission);
         requestLocation_friendEmail = findViewById(R.id.requestLocation_friendEmail);
+        requestLocation_sentRequests = findViewById(R.id.requestLocation_sentRequests);
+        currentUser = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
+        reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE);
+        initializeRecyclerView(reference);
     }
 
-    public void locationUpdate(View view){
+    public void locationUpdate(View view) {
         requestLocationUpdate();
     }
 
     private void requestLocationUpdate() {
         Long currentTime = System.currentTimeMillis();
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE);
-        String currentUser = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
-        String requestUserLocation = (requestLocation_friendEmail.getEditText().getText().toString()).replace('.',',');
-        requestList(currentUser,requestUserLocation,reference, currentTime);
-        reference = reference.child(requestUserLocation).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION);
-        reference.child(currentUser).setValue(currentTime);
+        //converting email into String that can be used as Reference
+        currentUser = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
+        String friendName = (requestLocation_friendEmail.getEditText().getText().toString()).replace('.', ',');
+        if (checkInput(friendName)) {
+            Query query = reference.child(friendName);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    //checks whether user is in database
+                    isUser = snapshot.exists();
+                    if (isUser) {
+                        sendRequest(currentUser, currentTime, friendName, reference);
+                        requestLocation_friendEmail.setError(null);
+                        requestLocation_friendEmail.setErrorEnabled(false);
+                        if(toast != null){
+                            toast.cancel();
+                        }
+                        toast = Toast.makeText(RequestLocationPermission.this, "Request Sent", Toast.LENGTH_SHORT);
+                        toast.show();
+                    } else {
+                        requestLocation_friendEmail.setError("User does not exist.");
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
     }
 
-    private void requestList(String currentUser, String friendName, DatabaseReference reference, Long time){
-        reference = reference.child(currentUser).child(REQUEST_PERMISSION_LIST_OF_REQUESTS);
-        reference.child(friendName).setValue(time);
+    //checks if user input an email
+    private boolean checkInput(String friendName) {
+        if (friendName.length() == 0) {
+            requestLocation_friendEmail.setError(getText(R.string.missing_field));
+            return false;
+        }
+        return true;
     }
+
+    //send the request notification to the friend
+    private void sendRequest(String currentUser, Long time, String friendName, DatabaseReference reference) {
+        requestList(currentUser, friendName, reference, time);
+        reference = reference.child(friendName).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION);
+        reference.child(currentUser).setValue(time);
+    }
+
+    //records the sent notification on the current user
+    private void requestList(String currentUser, String friendName, DatabaseReference reference, Long time) {
+        String email = friendName.replace(',', '.');
+        reference = reference.child(currentUser).child(REQUEST_PERMISSION_LIST_OF_REQUESTS);
+        reference.child(friendName).setValue(new RequestLocationHelperClass(email, time, "Pending"));
+    }
+
+    private void initializeRecyclerView(DatabaseReference reference) {
+        Query query = reference.child(currentUser).child(REQUEST_PERMISSION_LIST_OF_REQUESTS).orderByChild(TIME_SENT);
+        query.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    sentRequests = new ArrayList<>();
+                    for (DataSnapshot requests : snapshot.getChildren()) {
+                        sentRequests.add(requests.getValue(RequestLocationHelperClass.class));
+                    }
+                }
+                RequestLocationAdapter adapter = new RequestLocationAdapter(sentRequests);
+                requestLocation_sentRequests.setAdapter(adapter);
+                linearLayoutManager.setReverseLayout(true);
+                linearLayoutManager.setStackFromEnd(true);
+                requestLocation_sentRequests.setLayoutManager(linearLayoutManager);
+                DividerItemDecoration item = new DividerItemDecoration(RequestLocationPermission.this,
+                        linearLayoutManager.getOrientation());
+                requestLocation_sentRequests.addItemDecoration(item);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
+
 }

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="3dp"
+        android:padding="3dp"
+        app:cardCornerRadius="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="5dp">
+
+            <ImageView
+                android:id="@+id/requestLocation_imageStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/ic_pending_request" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/requestLocation_username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:text="@string/loading"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/darkBlack"
+                android:textStyle="bold"
+                app:layout_constraintBaseline_toBaselineOf="@+id/requestLocation_status"
+                app:layout_constraintStart_toEndOf="@+id/requestLocation_imageStatus" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/requestLocation_dateSent"
+                android:layout_width="wrap_content"
+                android:layout_height="19dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/loading"
+                app:layout_constraintStart_toStartOf="@+id/requestLocation_username"
+                app:layout_constraintTop_toBottomOf="@+id/requestLocation_username" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/requestLocation_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:padding="0dp"
+                android:paddingStart="3dp"
+                android:paddingEnd="3dp"
+                android:text="@string/request_location_status"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/requestLocation_currentStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/loading"
+                app:layout_constraintEnd_toEndOf="@+id/requestLocation_status"
+                app:layout_constraintStart_toStartOf="@+id/requestLocation_status"
+                app:layout_constraintTop_toBottomOf="@+id/requestLocation_status" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.cardview.widget.CardView>
+</androidx.constraintlayout.widget.ConstraintLayout>

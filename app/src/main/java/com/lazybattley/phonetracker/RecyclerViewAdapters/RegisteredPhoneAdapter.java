@@ -39,7 +39,7 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
     @NonNull
     @Override
     public RegisteredPhoneAdapter.RegisteredPhoneViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.registered_phones_row_layout, parent,false);
+        View view = LayoutInflater.from(context).inflate(R.layout.row_registered_phones, parent,false);
         return new RegisteredPhoneViewHolder(view);
     }
 

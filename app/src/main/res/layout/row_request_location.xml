@@ -24,8 +24,9 @@
             <ImageView
                 android:id="@+id/requestLocation_imageStatus"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="0dp"
                 android:layout_marginStart="16dp"
+                android:foregroundGravity="center_horizontal"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
@@ -46,7 +47,7 @@
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/requestLocation_dateSent"
                 android:layout_width="wrap_content"
-                android:layout_height="19dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="8dp"
                 android:text="@string/loading"

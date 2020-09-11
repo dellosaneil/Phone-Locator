@@ -4,11 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,23 +21,29 @@ import com.lazybattley.phonetracker.Dashboard.RequestLocation.RequestLocationPer
 import com.lazybattley.phonetracker.OptionsScreen;
 import com.lazybattley.phonetracker.R;
 
+import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_TO_ACCESS_LOCATION;
+
 public class MainDashBoardActivity extends AppCompatActivity {
 
     private DatabaseReference rootNode;
     private static final String TAG = "MainDashBoardActivity";
     public static String ENCODED_EMAIL;
-    private FloatingActionButton mainDashboard_notificationButton;
+    private CardView mainDashboard_bellCardView;
+    private TextView mainDashBoard_notificationCounter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_dash_board);
+        mainDashboard_bellCardView = findViewById(R.id.mainDashboard_bellCardView);
+        mainDashBoard_notificationCounter = findViewById(R.id.mainDashBoard_notificationCounter);
         ENCODED_EMAIL = encodeEmail(FirebaseAuth.getInstance().getCurrentUser().getEmail());
         rootNode = FirebaseDatabase.getInstance().getReference("users");
-        rootNode.child(ENCODED_EMAIL).child("people_requesting_location").addListenerForSingleValueEvent(new ValueEventListener() {
+        rootNode.child(ENCODED_EMAIL).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Log.i(TAG, "onDataChange: " + snapshot.getChildrenCount());
+                long count = snapshot.getChildrenCount();
+                updateNotificationCounter(count);
             }
 
             @Override
@@ -44,17 +51,19 @@ public class MainDashBoardActivity extends AppCompatActivity {
 
             }
         });
-        mainDashboard_notificationButton = findViewById(R.id.mainDashboard_notificationButton);
-
-
-        mainDashboard_notificationButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                Log.i(TAG, "onClick: " + );
-            }
-        });
-        
     }
+
+    private void updateNotificationCounter(long count){
+        String number = String.valueOf(count);
+        if(count == 0){
+            mainDashboard_bellCardView.setVisibility(View.INVISIBLE);
+        }else{
+            mainDashboard_bellCardView.setVisibility(View.VISIBLE);
+            mainDashBoard_notificationCounter.setText(number);
+        }
+
+    }
+
 
     private String encodeEmail(String email){
         return email.replace(".", ",");

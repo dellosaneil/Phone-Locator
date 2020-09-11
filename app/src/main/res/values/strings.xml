@@ -74,25 +74,14 @@
     <string name="error_geolocation">Could not get the location… Refresh the page</string>
 
 
-
-<!--    Request location of Friend-->
+    <!--    Request location of Friend-->
     <string name="request_location_username">Enter Friends\' Email</string>
     <string name="request_location_message">Send a message…</string>
     <string name="request_location_status">Status:</string>
     <string name="request_location_send_button">Send a Request</string>
-
-
-
-
-
-
-
-
-
-
-
-
-
+    <string name="request_location_time_sent">Time Sent:\n\t %1$s %2$s</string>
+    <string name="request_location_dialog_title">Would you like to cancel this request?</string>
+    <string name="request_location_simple_text_view">Sent Request</string>
 
 
 </resources>

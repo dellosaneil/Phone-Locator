@@ -21,8 +21,6 @@ public class GlobalVariables {
     public static final String REQUEST_PERMISSION_LIST_OF_REQUESTS = "sent_requests";
 
 
-
-
 //    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 //
 //    String dateString = formatter.format(new Date(1599262421155L));

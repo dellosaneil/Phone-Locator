@@ -24,8 +24,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     private Context context;
     private List<RequestLocationFriendHelperClass> receivedRequests;
+    private NotificationClick notificationClick;
 
-    public NotificationAdapter(Context context, List<RequestLocationFriendHelperClass> receivedRequests) {
+    public NotificationAdapter(Context context, List<RequestLocationFriendHelperClass> receivedRequests, NotificationClick notificationClick) {
+        this.notificationClick = notificationClick;
         this.context = context;
         this.receivedRequests = receivedRequests;
     }
@@ -34,7 +36,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     @Override
     public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.row_notification, parent, false);
-        return new NotificationViewHolder(view);
+        return new NotificationViewHolder(view, notificationClick);
     }
 
 
@@ -68,18 +70,45 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     }
 
 
-    public static class NotificationViewHolder extends RecyclerView.ViewHolder {
+    public static class NotificationViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private TextView rowNotification_user;
         private TextView rowNotification_timeSent;
         private ImageView rowNotification_imageType;
+        private NotificationClick notificationClick;
 
-        public NotificationViewHolder(@NonNull View itemView) {
+        public NotificationViewHolder(@NonNull View itemView, NotificationClick notificationClick) {
             super(itemView);
+            itemView.setOnClickListener(this);
+            this.notificationClick = notificationClick;
             rowNotification_user = itemView.findViewById(R.id.rowNotification_user);
             rowNotification_imageType = itemView.findViewById(R.id.rowNotification_imageType);
             rowNotification_timeSent = itemView.findViewById(R.id.rowNotification_timeSent);
         }
 
+        @Override
+        public void onClick(View view) {
+            notificationClick.onClickNotification(getAdapterPosition());
+        }
+    }
+
+    public interface NotificationClick{
+        void onClickNotification(int position);
+
 
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

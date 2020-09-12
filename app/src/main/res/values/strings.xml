@@ -80,11 +80,23 @@
     <string name="request_location_status">Status:</string>
     <string name="request_location_send_button">Send a Request</string>
     <string name="request_location_time_sent">Time Sent:\n\t %1$s %2$s</string>
-    <string name="request_location_dialog_title">Would you like to cancel this request?</string>
+    <string name="request_location_dialog_title">Are you sure you want to delete this request?</string>
     <string name="request_location_simple_text_view">Sent Request</string>
+    <string name="request_location_delete">Delete</string>
+    <string name="request_location_cancel">Cancel</string>
+    <string name="request_location_dialog_title_accepted">%1$s has accepted your request</string>
+    <string name="request_location_dialog_title_declined">%1$s has declined your request</string>
+    <string name="request_location_accepted_message">You may now see %1$s current location.</string>
+    <string name="request_location_declined_message">You may send another request to him/her again.</string>
+    <string name="request_location_resend_request">Resend Request</string>
+    <string name="request_location_accepted_go_to_map">Map View</string>
 
-<!--    Notification Adapter-->
+    <!--    Notification Adapter-->
     <string name="notification_adapter_location_request_message">would like to access your location</string>
+    <string name="notification_dialog_message">What would you like to do?</string>
+    <string name="notification_dialog_accept">Accept</string>
+    <string name="notification_dialog_decline">Decline</string>
+    <string name="title_activity_map_current_location">Map</string>
 
 
 </resources>

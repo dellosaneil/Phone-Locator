@@ -109,19 +109,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         isRegistered = preferences.getBoolean(PHONE_REGISTRATION, false);
     }
 
-    private void hideViews() {
-        registerPhone_cardView.setVisibility(View.INVISIBLE);
-        registerPhone_registerOrUnregisterButton.setVisibility(View.INVISIBLE);
-        registerPhone_phonesRegistered.setVisibility(View.INVISIBLE);
-        registerPhone_progressBar.setVisibility(View.VISIBLE);
-    }
-
-//    private void showViews() {
-//        registerPhone_cardView.setVisibility(View.VISIBLE);
-//        registerPhone_registerOrUnregisterButton.setVisibility(View.VISIBLE);
-//        registerPhone_phonesRegistered.setVisibility(View.VISIBLE);
-//        registerPhone_progressBar.setVisibility(View.INVISIBLE);
-//    }
 
     private void getCurrentStatus() {
         if (isRegistered) {

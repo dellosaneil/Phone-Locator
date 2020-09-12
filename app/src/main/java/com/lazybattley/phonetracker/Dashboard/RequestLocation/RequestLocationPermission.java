@@ -1,6 +1,7 @@
 package com.lazybattley.phonetracker.Dashboard.RequestLocation;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
     private ProgressBar progressBar;
     private RequestLocationAdapter adapter;
+    private String friendEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,32 +63,64 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     }
 
     public void locationUpdate(View view) {
-        requestLocationUpdate();
+        friendEmail = requestLocation_friendEmail.getEditText().getText().toString();
+        String friendName = (requestLocation_friendEmail.getEditText().getText().toString()).replace('.', ',');
+        checkStatus(reference, friendName);
+
+
     }
 
+
+    //asks friend to get access to current location.
     private void requestLocationUpdate() {
         Long currentTime = System.currentTimeMillis();
         //converting email into String that can be used as Reference
         currentUser = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
         String friendName = (requestLocation_friendEmail.getEditText().getText().toString()).replace('.', ',');
-        if (checkInput(friendName)) {
-            Query query = reference.child(friendName);
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
+
+        Query query = reference.child(friendName);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                //checks whether user is in database
+                isUser = snapshot.exists();
+                if (isUser) {
+                    sendRequest(currentUser, currentTime, friendName, reference);
+                    requestLocation_friendEmail.setError(null);
+                    requestLocation_friendEmail.setErrorEnabled(false);
+                    if (toast != null) {
+                        toast.cancel();
+                    }
+                    toast = Toast.makeText(RequestLocationPermission.this, "Request Sent", Toast.LENGTH_SHORT);
+                    toast.show();
+                    requestLocation_friendEmail.getEditText().setText("");
+                } else {
+                    requestLocation_friendEmail.setError("User does not exist.");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+    }
+
+    private void checkStatus(DatabaseReference reference, String decodedFriendEmail) {
+        if (checkInput(friendEmail)) {
+            Query query = reference.child(currentUser).child(REQUEST_PERMISSION_LIST_OF_REQUESTS).child(decodedFriendEmail);
+            query.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    //checks whether user is in database
-                    isUser = snapshot.exists();
-                    if (isUser) {
-                        sendRequest(currentUser, currentTime, friendName, reference);
-                        requestLocation_friendEmail.setError(null);
-                        requestLocation_friendEmail.setErrorEnabled(false);
-                        if (toast != null) {
-                            toast.cancel();
+                    if (snapshot.exists()) {
+                        RequestLocationCurrentHelperClass details = snapshot.getValue(RequestLocationCurrentHelperClass.class);
+                        if (details.getStatus().equals("Accepted")) {
+                            Toast.makeText(RequestLocationPermission.this, "User already accepted request.", Toast.LENGTH_SHORT).show();
+                            requestLocation_friendEmail.getEditText().setText("");
                         }
-                        toast = Toast.makeText(RequestLocationPermission.this, "Request Sent", Toast.LENGTH_SHORT);
-                        toast.show();
                     } else {
-                        requestLocation_friendEmail.setError("User does not exist.");
+                        requestLocationUpdate();
                     }
                 }
 
@@ -96,7 +130,10 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
                 }
             });
         }
+
+
     }
+
 
     //checks if user input an email
     private boolean checkInput(String friendName) {
@@ -110,9 +147,9 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     //send the request notification to the friend
     private void sendRequest(String currentUser, Long time, String friendName, DatabaseReference reference) {
         requestList(currentUser, friendName, reference, time);
-        String originalEmail = currentUser.replace(',','.');
+        String originalEmail = currentUser.replace(',', '.');
         reference = reference.child(friendName).child(ALL_NOTIFICATIONS).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION);
-        reference.child(currentUser).setValue(new RequestLocationFriendHelperClass(originalEmail,time));
+        reference.child(currentUser).setValue(new RequestLocationFriendHelperClass(originalEmail, time));
     }
 
     //records the sent notification on the current user
@@ -129,7 +166,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 sentRequests = new ArrayList<>();
                 if (snapshot.exists()) {
-                    requestLocation_friendEmail.getEditText().setText("");
                     for (DataSnapshot requests : snapshot.getChildren()) {
                         sentRequests.add(requests.getValue(RequestLocationCurrentHelperClass.class));
                     }

@@ -19,6 +19,8 @@ public class GlobalVariables {
     public static final String REQUEST_PERMISSION_TO_ACCESS_LOCATION = "pending_requests";
     public static final String REQUEST_PERMISSION_LIST_OF_REQUESTS = "sent_requests";
     public static final String ALL_NOTIFICATIONS = "notifications";
+    public static final String TIME_SENT = "timeSent";
+    public static final String NOTIFICATION_STATUS = "status";
 
 
 

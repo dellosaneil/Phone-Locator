@@ -19,12 +19,15 @@
             android:layout_width="match_parent"
             android:layout_height="75dp">
 
-            <ImageView
+            <ImageButton
                 android:id="@+id/mainDashBoard_notificationBell"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="16dp"
+                android:background="#00000000"
+                android:onClick="viewAllNotification"
+                android:transitionName="mainDashboard_toNotification"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/ic_bell" />
@@ -33,8 +36,8 @@
                 android:id="@+id/mainDashboard_bellCardView"
                 android:layout_width="20dp"
                 android:layout_height="20dp"
-                app:cardBackgroundColor="#FF220C"
                 android:innerRadius="0dp"
+                app:cardBackgroundColor="#FF220C"
                 app:cardCornerRadius="10dp"
                 app:layout_constraintEnd_toEndOf="@+id/mainDashBoard_notificationBell"
                 app:layout_constraintTop_toTopOf="@+id/mainDashBoard_notificationBell">
@@ -52,7 +55,7 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/mainDashBoard_register_unregister"
+            android:id="@+id/mainDashBoard_registerOrUnregister"
             android:layout_width="250dp"
             android:layout_height="110dp"
             android:layout_gravity="center"
@@ -62,7 +65,7 @@
             android:tag="register"
             android:text="@string/main_dashboard_registered_devices"
             android:textColor="@color/darkBlack"
-            android:transitionName="transition_register_phone"
+            android:transitionName="mainDashboard_toRegisterPhone"
             app:cornerRadius="10dp" />
 
         <com.google.android.material.button.MaterialButton
@@ -77,6 +80,7 @@
             android:tag="request"
             android:text="@string/main_dashboard_request_friend_location"
             android:textColor="@color/darkBlack"
+            android:transitionName="mainDashboard_toRequest"
             app:cornerRadius="10dp" />
 
         <com.google.android.material.button.MaterialButton

@@ -83,5 +83,8 @@
     <string name="request_location_dialog_title">Would you like to cancel this request?</string>
     <string name="request_location_simple_text_view">Sent Request</string>
 
+<!--    Notification Adapter-->
+    <string name="notification_adapter_location_request_message">would like to access your location</string>
+
 
 </resources>

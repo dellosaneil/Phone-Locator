@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,26 +21,29 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
-public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhoneAdapter.RegisteredPhoneViewHolder>{
+public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhoneAdapter.RegisteredPhoneViewHolder> {
 
     private Context context;
     private List<String> model;
     private List<LatLng> coordinates;
     private List<Integer> batteryLevel;
+    private RecyclerView recyclerView;
+    private ProgressBar progressBar;
 
 
-
-    public RegisteredPhoneAdapter(Context context, List<String> model, List<LatLng> coordinates , List<Integer> batteryLevel) {
+    public RegisteredPhoneAdapter(Context context, List<String> model, List<LatLng> coordinates, List<Integer> batteryLevel, RecyclerView recyclerView, ProgressBar progressBar) {
         this.context = context;
         this.model = model;
         this.coordinates = coordinates;
         this.batteryLevel = batteryLevel;
+        this.recyclerView = recyclerView;
+        this.progressBar = progressBar;
     }
 
     @NonNull
     @Override
     public RegisteredPhoneAdapter.RegisteredPhoneViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.row_registered_phones, parent,false);
+        View view = LayoutInflater.from(context).inflate(R.layout.row_registered_phones, parent, false);
         return new RegisteredPhoneViewHolder(view);
     }
 
@@ -48,8 +52,11 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
         String phoneModel = model.get(position);
         LatLng location = coordinates.get(position);
         final String[] address = {null};
-
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
+        if (position == model.size() - 1) {
+            recyclerView.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.INVISIBLE);
+        }
 
         final LatLng finalLocation = location;
         final String finalPhoneModel = phoneModel;
@@ -68,7 +75,7 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
                 public void run() {
                     holder.registeredPhoneAdapter_phoneModel.setText(finalPhoneModel);
                     holder.registeredPhoneAdapter_phoneLocation.setText(address[0]);
-                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getText(R.string.registered_phone_battery_level)+" "+batteryLevel.get(position)+"%");
+                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getText(R.string.registered_phone_battery_level) + " " + batteryLevel.get(position) + "%");
                 }
             });
         }).start();
@@ -77,7 +84,7 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
 
     @Override
     public int getItemCount() {
-        if(model == null){
+        if (model == null) {
             return 0;
         }
         return model.size();

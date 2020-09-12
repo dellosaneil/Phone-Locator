@@ -2,19 +2,19 @@ package com.lazybattley.phonetracker.HelperClasses;
 
 public class RequestLocationFriendHelperClass {
 
-    private String currentEmail;
+    private String email;
     private long timeSent;
 
-    public RequestLocationFriendHelperClass(String currentEmail, long timeSent) {
-        this.currentEmail = currentEmail;
+    public RequestLocationFriendHelperClass(String email, long timeSent) {
+        this.email = email;
         this.timeSent = timeSent;
     }
 
     public RequestLocationFriendHelperClass() {
     }
 
-    public String getCurrentEmail() {
-        return currentEmail;
+    public String getEmail() {
+        return email;
     }
 
     public long getTimeSent() {

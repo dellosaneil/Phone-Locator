@@ -28,6 +28,7 @@ import com.lazybattley.phonetracker.RecyclerViewAdapters.RequestLocationAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.lazybattley.phonetracker.GlobalVariables.ALL_NOTIFICATIONS;
 import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_LIST_OF_REQUESTS;
 import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_TO_ACCESS_LOCATION;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
@@ -110,7 +111,7 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private void sendRequest(String currentUser, Long time, String friendName, DatabaseReference reference) {
         requestList(currentUser, friendName, reference, time);
         String originalEmail = currentUser.replace(',','.');
-        reference = reference.child(friendName).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION);
+        reference = reference.child(friendName).child(ALL_NOTIFICATIONS).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION);
         reference.child(currentUser).setValue(new RequestLocationFriendHelperClass(originalEmail,time));
     }
 

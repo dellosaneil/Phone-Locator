@@ -82,7 +82,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         registerPhone_phonesRegistered = findViewById(R.id.registerPhone_phonesRegistered);
         registerPhone_registerOrUnregisterButton = findViewById(R.id.registerPhone_registerOrUnregisterButton);
         registerPhone_isRegistered = findViewById(R.id.registerPhone_isRegistered);
-        hideViews();
+//        hideViews();
         phoneModel = new ArrayList<>();
         coordinates = new ArrayList<>();
         batteryLevel = new ArrayList<>();
@@ -116,12 +116,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
         registerPhone_progressBar.setVisibility(View.VISIBLE);
     }
 
-    private void showViews() {
-        registerPhone_cardView.setVisibility(View.VISIBLE);
-        registerPhone_registerOrUnregisterButton.setVisibility(View.VISIBLE);
-        registerPhone_phonesRegistered.setVisibility(View.VISIBLE);
-        registerPhone_progressBar.setVisibility(View.INVISIBLE);
-    }
+//    private void showViews() {
+//        registerPhone_cardView.setVisibility(View.VISIBLE);
+//        registerPhone_registerOrUnregisterButton.setVisibility(View.VISIBLE);
+//        registerPhone_phonesRegistered.setVisibility(View.VISIBLE);
+//        registerPhone_progressBar.setVisibility(View.INVISIBLE);
+//    }
 
     private void getCurrentStatus() {
         if (isRegistered) {
@@ -196,13 +196,16 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT).show();
                 }
-                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this, phoneModel, coordinates, batteryLevel);
+                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(RegisterPhoneDashboardActivity.this,
+                        phoneModel, coordinates, batteryLevel,registerPhone_phonesRegistered,registerPhone_progressBar);
                 registerPhone_phonesRegistered.setAdapter(adapter);
                 registerPhone_phonesRegistered.setLayoutManager(new LinearLayoutManager(RegisterPhoneDashboardActivity.this));
                 DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(registerPhone_phonesRegistered.getContext(),
                         new LinearLayoutManager(RegisterPhoneDashboardActivity.this).getOrientation());
                 registerPhone_phonesRegistered.addItemDecoration(dividerItemDecoration);
-                showViews();
+
+                registerPhone_progressBar.setVisibility(View.INVISIBLE);
+//                showViews();
             }
 
             @Override
@@ -212,13 +215,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
 
 
     }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        startActivity(new Intent(this, MainDashBoardActivity.class));
-    }
-
 
     private void requestPermission(){
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
@@ -235,4 +231,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
             finish();
         }
     }
+
+
+
 }

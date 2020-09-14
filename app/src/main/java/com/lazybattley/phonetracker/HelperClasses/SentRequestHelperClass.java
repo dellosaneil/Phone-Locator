@@ -1,18 +1,18 @@
 package com.lazybattley.phonetracker.HelperClasses;
 
-public class RequestLocationCurrentHelperClass {
+public class SentRequestHelperClass {
 
     private String email;
     private Long timeSent;
     private String status;
 
-    public RequestLocationCurrentHelperClass(String email, Long timeSent, String status) {
+    public SentRequestHelperClass(String email, Long timeSent, String status) {
         this.email = email;
         this.timeSent = timeSent;
         this.status = status;
     }
 
-    public RequestLocationCurrentHelperClass() {
+    public SentRequestHelperClass() {
     }
 
     public void setStatus(String status) {

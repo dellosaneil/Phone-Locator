@@ -4,38 +4,49 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
+import androidx.annotation.NonNull;
+
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.lazybattley.phonetracker.HelperClasses.RequestLocationFriendHelperClass;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.HelperClasses.AcceptedUsersHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.AvailableLocationHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.lazybattley.phonetracker.GlobalVariables.ALL_NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATION_STATUS;
-import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_LIST_OF_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_TO_ACCESS_LOCATION;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
+import static com.lazybattley.phonetracker.GlobalVariables.STATUS;
+import static com.lazybattley.phonetracker.GlobalVariables.SENT_REQUESTS;
+import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
 public class RespondRequestDialog {
 
 
     public static final String AVAILABLE_LOCATIONS = "available_location";
+    public static final String ACCEPTED_USERS = "accepted_users";
+    public static final String USER_DETAILS = "user_detail";
 
     private Activity activity;
     private String friendEmail;
     private DatabaseReference reference;
     private String user;
+    private volatile String fullName;
 
     public RespondRequestDialog(Activity activity, String friendEmail) {
         this.activity = activity;
-        this.friendEmail = friendEmail.replace('.',',');
+        this.friendEmail = friendEmail.replace('.', ',');
         this.user = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
-        this.reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE);
+        this.reference = FirebaseDatabase.getInstance().getReference(USERS);
+        getFullName(this.reference);
         createAlertDialog();
-
     }
 
     public void createAlertDialog() {
@@ -46,7 +57,8 @@ public class RespondRequestDialog {
                     public void onClick(DialogInterface dialogInterface, int i) {
                         updateStatus(reference, "Accepted");
                         removeNotificationFromCurrentUser(reference);
-                        addedToList(reference);
+                        acceptedRequestFriend(reference);
+                        acceptedRequestUser(reference);
                     }
                 })
                 .setNegativeButton(R.string.notification_dialog_decline, new DialogInterface.OnClickListener() {
@@ -59,29 +71,47 @@ public class RespondRequestDialog {
                 .show();
     }
 
-    private void addedToList(DatabaseReference reference) {
+    private void acceptedRequestFriend(DatabaseReference reference) {
         long time = System.currentTimeMillis();
-        String decodedEmail = decodeEmail(user);
         reference = reference.child(friendEmail).child(AVAILABLE_LOCATIONS).child(user);
-        reference.setValue(new RequestLocationFriendHelperClass(decodedEmail, time));
+        reference.setValue(new AvailableLocationHelperClass(fullName, friendEmail, time));
     }
 
+    private void getFullName(DatabaseReference reference) {
+        Query query = reference.child(user).child(USER_DETAILS);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
+                fullName = userDetails.getFullName();
+            }
 
-    private void removeNotificationFromCurrentUser(DatabaseReference reference){
-        reference = reference.child(user).child(ALL_NOTIFICATIONS).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION).child(friendEmail);
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    //clears the notification from the user dashboard
+    private void removeNotificationFromCurrentUser(DatabaseReference reference) {
+        reference = reference.child(user).child(NOTIFICATIONS).child(PENDING_REQUESTS).child(friendEmail);
         reference.removeValue();
     }
 
-    private void updateStatus(DatabaseReference reference, String answer){
+    //reflected on friend user table. "accepted or declined"
+    private void updateStatus(DatabaseReference reference, String answer) {
         Map<String, Object> temp = new HashMap<>();
-        temp.put(NOTIFICATION_STATUS, answer);
-        reference = reference.child(friendEmail).child(REQUEST_PERMISSION_LIST_OF_REQUESTS)
+        temp.put(STATUS, answer);
+        reference = reference.child(friendEmail).child(SENT_REQUESTS)
                 .child(user);
         reference.updateChildren(temp);
     }
 
-    private String decodeEmail(String encodedEmail){
-        return encodedEmail.replace(',', '.');
-    }
 
+    //reflected on current user table.
+    private void acceptedRequestUser(DatabaseReference reference) {
+        reference = reference.child(user).child(ACCEPTED_USERS).child(friendEmail);
+        reference.setValue(new AcceptedUsersHelperClass(fullName, friendEmail.replace(',', '.'), System.currentTimeMillis()));
+    }
 }

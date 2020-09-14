@@ -19,7 +19,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
-import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAILS;
 
 public class SignUpActivityOne extends AppCompatActivity {
@@ -37,7 +37,7 @@ public class SignUpActivityOne extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_one);
         rootNode = FirebaseDatabase.getInstance();
-        reference = rootNode.getReference(USERS_REFERENCE);
+        reference = rootNode.getReference(USERS);
         imageView = findViewById(R.id.imageView);
         signUp_email = findViewById(R.id.signUp_email);
         auth = FirebaseAuth.getInstance();
@@ -162,7 +162,7 @@ public class SignUpActivityOne extends AppCompatActivity {
 
     //Adds new user in the database
     private void addNewUser(String email, String childReference, String fullName) {
-        reference.child(childReference).child(USER_DETAILS).setValue(new SignUpHelperClass(childReference, email, fullName));
+        reference.child(childReference).child(USER_DETAILS).setValue(new SignUpHelperClass(childReference, email, fullName, "No Phone"));
     }
 
 

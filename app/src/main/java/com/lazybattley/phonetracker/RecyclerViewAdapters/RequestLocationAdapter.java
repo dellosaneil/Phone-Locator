@@ -1,6 +1,7 @@
 package com.lazybattley.phonetracker.RecyclerViewAdapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,7 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textview.MaterialTextView;
-import com.lazybattley.phonetracker.HelperClasses.RequestLocationCurrentHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import java.text.DateFormat;
@@ -23,11 +24,11 @@ import java.util.TimeZone;
 
 public class RequestLocationAdapter extends RecyclerView.Adapter<RequestLocationAdapter.RequestLocationViewHolder> {
     private Context context;
-    private List<RequestLocationCurrentHelperClass> sentRequests;
+    private List<SentRequestHelperClass> sentRequests;
     private ProgressBar progressBar;
     private RequestClicked requestClicked;
 
-    public RequestLocationAdapter(Context context, List<RequestLocationCurrentHelperClass> sentRequests, ProgressBar progressBar, RequestClicked requestClicked) {
+    public RequestLocationAdapter(Context context, List<SentRequestHelperClass> sentRequests, ProgressBar progressBar, RequestClicked requestClicked) {
         this.context = context;
         this.sentRequests = sentRequests;
         this.progressBar = progressBar;
@@ -43,7 +44,7 @@ public class RequestLocationAdapter extends RecyclerView.Adapter<RequestLocation
 
     @Override
     public void onBindViewHolder(@NonNull RequestLocationViewHolder holder, int position) {
-        RequestLocationCurrentHelperClass temp = sentRequests.get(position);
+        SentRequestHelperClass temp = sentRequests.get(position);
         setStatus(temp.getStatus(), holder);
         setTime(temp.getTimeSent(), holder);
         holder.requestLocation_email.setText(temp.getEmail());
@@ -59,12 +60,15 @@ public class RequestLocationAdapter extends RecyclerView.Adapter<RequestLocation
                 break;
             case "Accepted":
                 holder.requestLocation_imageStatus.setImageResource(R.drawable.ic_accepted);
+                holder.requestLocation_currentStatus.setTextColor(Color.GREEN);
                 break;
             case "Declined":
                 holder.requestLocation_imageStatus.setImageResource(R.drawable.ic_denied);
+                holder.requestLocation_currentStatus.setTextColor(Color.RED);
                 break;
         }
         holder.requestLocation_currentStatus.setText(status);
+
     }
 
     private void setTime(long time, RequestLocationViewHolder holder) {

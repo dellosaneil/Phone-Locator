@@ -99,4 +99,11 @@
     <string name="title_activity_map_current_location">Map</string>
 
 
+<!--    Current Location Summary-->
+    <string name="current_location_summary_updated_at">Updated At:</string>
+    <string name="current_location_summary_time">\n%1$s\n%2$s</string>
+
+
+
+
 </resources>

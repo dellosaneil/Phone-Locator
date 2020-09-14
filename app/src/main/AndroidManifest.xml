@@ -13,8 +13,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name=".PersistentNotification"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -41,12 +41,10 @@
         <activity android:name=".Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity" />
         <activity android:name=".Dashboard.MainDashBoardActivity" />
         <activity
-            android:name=".LogInSignUp.SignUpActivityOne"
-            android:windowSoftInputMode="stateHidden" />
+            android:name=".LogInSignUp.SignUpActivityOne"/>
         <activity android:name=".OptionsScreen" />
         <activity
-            android:name=".LogInSignUp.LogInActivity"
-            android:windowSoftInputMode="stateHidden" />
+            android:name=".LogInSignUp.LogInActivity"/>
         <activity android:name=".SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

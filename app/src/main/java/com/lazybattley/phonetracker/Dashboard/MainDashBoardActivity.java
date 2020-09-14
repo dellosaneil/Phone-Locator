@@ -25,14 +25,13 @@ import com.lazybattley.phonetracker.Dashboard.RequestLocation.RequestLocationPer
 import com.lazybattley.phonetracker.OptionsScreen;
 import com.lazybattley.phonetracker.R;
 
-import static com.lazybattley.phonetracker.GlobalVariables.ALL_NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.REQUEST_PERMISSION_TO_ACCESS_LOCATION;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
+import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
+import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
 public class MainDashBoardActivity extends AppCompatActivity {
 
     private DatabaseReference rootNode;
-    private static final String TAG = "MainDashBoardActivity";
     public static String ENCODED_EMAIL;
     private CardView mainDashboard_bellCardView;
     private TextView mainDashBoard_notificationCounter;
@@ -50,8 +49,8 @@ public class MainDashBoardActivity extends AppCompatActivity {
         mainDashboard_bellCardView = findViewById(R.id.mainDashboard_bellCardView);
         mainDashBoard_notificationCounter = findViewById(R.id.mainDashBoard_notificationCounter);
         ENCODED_EMAIL = encodeEmail(FirebaseAuth.getInstance().getCurrentUser().getEmail());
-        rootNode = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE);
-        rootNode.child(ENCODED_EMAIL).child(ALL_NOTIFICATIONS).child(REQUEST_PERMISSION_TO_ACCESS_LOCATION).addValueEventListener(new ValueEventListener() {
+        rootNode = FirebaseDatabase.getInstance().getReference(USERS);
+        rootNode.child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 long count = snapshot.getChildrenCount();
@@ -102,14 +101,12 @@ public class MainDashBoardActivity extends AppCompatActivity {
         }
     }
 
-
     public void viewAllNotification(View view) {
         Intent intent = new Intent(this, NotificationActivity.class);
         Pair<View, String> pair = new Pair(mainDashBoard_notificationBell, "mainDashboard_toNotification");
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, pair);
         startActivity(intent, options.toBundle());
     }
-
 
     private void registerPhone() {
         Intent intent = new Intent(this, RegisterPhoneDashboardActivity.class);

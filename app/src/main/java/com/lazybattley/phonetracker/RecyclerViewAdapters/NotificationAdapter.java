@@ -10,7 +10,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.lazybattley.phonetracker.HelperClasses.RequestLocationFriendHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.PendingRequestHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import java.text.DateFormat;
@@ -23,10 +23,10 @@ import java.util.TimeZone;
 public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapter.NotificationViewHolder> {
 
     private Context context;
-    private List<RequestLocationFriendHelperClass> receivedRequests;
+    private List<PendingRequestHelperClass> receivedRequests;
     private NotificationClick notificationClick;
 
-    public NotificationAdapter(Context context, List<RequestLocationFriendHelperClass> receivedRequests, NotificationClick notificationClick) {
+    public NotificationAdapter(Context context, List<PendingRequestHelperClass> receivedRequests, NotificationClick notificationClick) {
         this.notificationClick = notificationClick;
         this.context = context;
         this.receivedRequests = receivedRequests;
@@ -43,7 +43,7 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     @Override
     public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
         String user = receivedRequests.get(position).getEmail();
-        long time = receivedRequests.get(position).getTimeSent();
+        long time = receivedRequests.get(position).getTime();
 
         String date = DateFormat.getDateInstance().format(time);
         String hour = timeFormat(time);

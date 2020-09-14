@@ -5,11 +5,20 @@ public class SignUpHelperClass {
     private String uniqueID;
     private String email;
     private String fullName;
+    private String mainPhone;
 
-    public SignUpHelperClass(String uniqueID, String email, String fullName) {
+    public SignUpHelperClass(String uniqueID, String email, String fullName, String mainPhone) {
         this.uniqueID = uniqueID;
         this.email = email;
         this.fullName = fullName;
+        this.mainPhone = mainPhone;
+    }
+
+    public SignUpHelperClass() {}
+
+
+    public String getMainPhone() {
+        return mainPhone;
     }
 
     public String getUniqueID() {

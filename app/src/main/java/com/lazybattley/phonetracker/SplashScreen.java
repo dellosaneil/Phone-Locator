@@ -2,9 +2,11 @@ package com.lazybattley.phonetracker;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.view.WindowManager;
 import android.view.animation.Animation;
@@ -30,7 +32,6 @@ public class SplashScreen extends AppCompatActivity {
     private Handler handler;
 
 
-    @SuppressLint("HardwareIds")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -45,6 +46,12 @@ public class SplashScreen extends AppCompatActivity {
         handler = HandlerCompat.createAsync(Looper.getMainLooper());
         BUILD_ID = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         auth = FirebaseAuth.getInstance();
+
+        SharedPreferences temp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = temp.edit();
+        editor.putBoolean("isRegistered", false);
+        editor.apply();
+
         loggedIn();
     }
 

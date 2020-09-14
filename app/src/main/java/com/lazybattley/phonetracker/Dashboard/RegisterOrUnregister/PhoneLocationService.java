@@ -37,9 +37,9 @@ import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.Regist
 import static com.lazybattley.phonetracker.GlobalVariables.BUILD_MODEL;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
-import static com.lazybattley.phonetracker.GlobalVariables.STATE;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS_REFERENCE;
-import static com.lazybattley.phonetracker.GlobalVariables.USER_PHONES;
+import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
+import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service {
@@ -63,7 +63,7 @@ public class PhoneLocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        state = intent.getBooleanExtra(STATE, false);
+        state = intent.getBooleanExtra(IS_REGISTERED, false);
         String buildId = intent.getStringExtra(BUILD_ID);
         PhoneLocationTracker locationTracker = new PhoneLocationTracker(this, buildId, executorService, handler);
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
@@ -124,7 +124,7 @@ public class PhoneLocationService extends Service {
             this.context = context;
             this.buildId = buildId;
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-            reference = FirebaseDatabase.getInstance().getReference(USERS_REFERENCE).child(ENCODED_EMAIL).child(USER_PHONES);
+            reference = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES);
             locationRequest = new LocationRequest();
             locationRequest.setInterval(3000);
             locationRequest.setFastestInterval(2500);

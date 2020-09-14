@@ -1,8 +1,11 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -10,11 +13,23 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
+
+import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
 public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    private RecyclerView currentLocation_summary;
+    private DatabaseReference reference;
+    public static final String AVAILABLE_LOCATION = "available_location";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,7 +39,32 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        currentLocation_summary = findViewById(R.id.currentLocation_summary);
     }
+
+    private void initializeRecyclerView(){
+        String currentUser = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace('.',',');
+        reference = FirebaseDatabase.getInstance().getReference(USERS).child(currentUser).child(AVAILABLE_LOCATION);
+        reference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if(snapshot.exists()){
+                    SignUpHelperClass friendDetails = snapshot.getValue(SignUpHelperClass.class);
+                }else{
+                    Toast.makeText(MapCurrentLocationActivity.this, "No users being tracked.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
+
+    }
+
 
     /**
      * Manipulates the map once available.

@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
@@ -31,7 +32,7 @@ public class LogInActivity extends AppCompatActivity {
     private TextInputLayout log_in_email, log_in_password;
     private ImageView logIn_logo;
     private FirebaseAuth auth;
-    private Intent intent;
+    private Intent tempIntent;
     private Pair<View, String>[] pairs;
     private ProgressBar logIn_progressBar;
 
@@ -39,12 +40,18 @@ public class LogInActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_in);
+        Intent intent = getIntent();
+        long prevTime = intent.getLongExtra("time", 0);
+        long currentTime = System.nanoTime();
+
+        Log.i("", "onCreate: " + (currentTime - prevTime));
+
         logInUser = findViewById(R.id.logInUser);
         logIn_logo = findViewById(R.id.logIn_logo);
         welcome_back_TV = findViewById(R.id.welcome_back_TV);
 
         new Thread(() -> {
-            intent = new Intent(this, SignUpActivityOne.class);
+            tempIntent = new Intent(this, SignUpActivityOne.class);
             pairs = new Pair[3];
             pairs[0] = new Pair<>(logIn_logo, "log_in_transition_logo");
             pairs[1] = new Pair<>(logInUser, "log_in_transition_button");
@@ -54,11 +61,12 @@ public class LogInActivity extends AppCompatActivity {
         log_in_email = findViewById(R.id.log_in_email);
         log_in_password = findViewById(R.id.log_in_password);
         logIn_progressBar = findViewById(R.id.logIn_progressBar);
-        auth = FirebaseAuth.getInstance();
+
 
     }
 
     public void logInUser(View view) {
+        auth = FirebaseAuth.getInstance();
         logIn_progressBar.setVisibility(View.VISIBLE);
         clearError();
         String email = validateEmail();
@@ -77,8 +85,9 @@ public class LogInActivity extends AppCompatActivity {
                         public void onSuccess(AuthResult authResult) {
                             if (auth.getCurrentUser().isEmailVerified()) {
                                 clearError();
-                                startActivity(new Intent(LogInActivity.this, MainDashBoardActivity.class));
-                                finish();
+                                Intent intent = new Intent(LogInActivity.this,MainDashBoardActivity.class);
+                                finishAffinity();
+                                startActivity(intent);
                             } else {
                                 Toast.makeText(LogInActivity.this, R.string.log_in_verify, Toast.LENGTH_SHORT).show();
                             }
@@ -146,9 +155,8 @@ public class LogInActivity extends AppCompatActivity {
 
 
     public void redirectSignUp(View view) {
-            ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
-            startActivity(intent, option.toBundle());
-//            startActivity(intent);
+        ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
+        startActivity(tempIntent, option.toBundle());
 
     }
 }

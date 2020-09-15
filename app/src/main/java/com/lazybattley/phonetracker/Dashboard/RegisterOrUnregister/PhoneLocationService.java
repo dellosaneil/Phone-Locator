@@ -134,7 +134,7 @@ public class PhoneLocationService extends Service {
         }
 
 
-        private void callback(){
+        private void callback() {
             locationCallback = new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
@@ -145,7 +145,7 @@ public class PhoneLocationService extends Service {
                         updatedAt = System.currentTimeMillis();
                         loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
                         batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-                        reference.child(buildId).setValue(new PhoneTrackHelperClass(loc, true, BUILD_MODEL, updatedAt, batteryLevel));
+                        reference.child(buildId).setValue(new PhoneTrackHelperClass(ENCODED_EMAIL, loc, true, BUILD_MODEL, updatedAt, batteryLevel));
                     }
                 }
             };

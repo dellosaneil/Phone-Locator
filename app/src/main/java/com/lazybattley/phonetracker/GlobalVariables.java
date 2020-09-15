@@ -7,7 +7,7 @@ public class GlobalVariables {
 
     public static final String IS_REGISTERED = "isRegistered";
     public static final String USERS = "users";
-    public static final String USER_DETAILS = "user_detail";
+    public static final String USER_DETAIL = "user_detail";
     public static final String REGISTERED_DEVICES = "registered_devices";
     public static final String BUILD_MODEL = Build.MODEL;
 

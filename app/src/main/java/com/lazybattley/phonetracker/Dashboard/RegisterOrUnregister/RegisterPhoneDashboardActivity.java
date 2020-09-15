@@ -46,7 +46,7 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCOD
 import static com.lazybattley.phonetracker.GlobalVariables.ACTIVE;
 import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
-import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAILS;
+import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAIL;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
 
 public class RegisterPhoneDashboardActivity extends AppCompatActivity {
@@ -111,7 +111,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity {
     }
 
     private void registerMainPhone(){
-        DatabaseReference query = FirebaseDatabase.getInstance().getReference(USERS).child(user.getEmail().replace('.',',')).child(USER_DETAILS);
+        DatabaseReference query = FirebaseDatabase.getInstance().getReference(USERS).child(user.getEmail().replace('.',',')).child(USER_DETAIL);
         query.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

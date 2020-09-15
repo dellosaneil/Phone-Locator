@@ -5,14 +5,19 @@ public class AvailableLocationHelperClass {
     private String fullName;
     private String email;
     private long timeSent;
+    private String mainPhone;
 
-    public AvailableLocationHelperClass(String fullName, String email, long timeSent) {
+    public AvailableLocationHelperClass(String fullName, String email, long timeSent, String mainPhone) {
         this.fullName = fullName;
         this.email = email;
         this.timeSent = timeSent;
+        this.mainPhone = mainPhone;
     }
 
-    public AvailableLocationHelperClass() {
+    public AvailableLocationHelperClass() {}
+
+    public String getMainPhone() {
+        return mainPhone;
     }
 
     public String getEmail() {

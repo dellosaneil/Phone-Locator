@@ -16,44 +16,51 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.Dashboard.GoToMap.MapCurrentLocationActivity;
-import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.PendingRequestHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.SENT_REQUESTS;
 import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.GlobalVariables.SENT_REQUESTS;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
 
 public class SentRequestsDialog {
 
     private Activity activity;
-    private String friendEmail;
+    private String encodedFriendEmail;
     private DatabaseReference reference;
-    private String user;
+    private String encodedUserEmail;
+    private String decodedFriendEmail;
+    private long currentTime;
+    private String decodedUserEmail;
 
 
-    public SentRequestsDialog(Activity activity, String friendEmail) {
+    public SentRequestsDialog(Activity activity, String encodedFriendEmail) {
         this.activity = activity;
-        this.friendEmail = friendEmail.replace('.', ',');
-        this.user = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
+        this.encodedFriendEmail = encodedFriendEmail.replace('.', ',');
+        this.decodedUserEmail = (FirebaseAuth.getInstance().getCurrentUser().getEmail());
+        this.encodedUserEmail = decodedUserEmail.replace('.', ',');
+
         this.reference = FirebaseDatabase.getInstance().getReference(USERS);
+        this.decodedFriendEmail = encodedFriendEmail;
+        this.currentTime = System.currentTimeMillis();
         checkStatus(reference);
     }
 
     public void checkStatus(DatabaseReference reference) {
-        Query query = reference.child(user).child(SENT_REQUESTS).child(friendEmail);
+        Query query = reference.child(encodedUserEmail).child(SENT_REQUESTS).child(encodedFriendEmail);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     SentRequestHelperClass details = snapshot.getValue(SentRequestHelperClass.class);
-                    if(details.getStatus().equals("Accepted")){
+                    if (details.getStatus().equals("Accepted")) {
                         acceptedRequest();
-                    }else if(details.getStatus().equals("Pending")){
+                    } else if (details.getStatus().equals("Pending")) {
                         cancelRequest();
-                    }else{
+                    } else {
                         declinedRequest();
                     }
                 } else {
@@ -70,8 +77,8 @@ public class SentRequestsDialog {
 
     private void acceptedRequest() {
         new AlertDialog.Builder(activity)
-                .setTitle(activity.getString(R.string.request_location_dialog_title_accepted, friendEmail.replace(',', '.')))
-                .setMessage(activity.getString(R.string.request_location_accepted_message, friendEmail.replace(',', '.')))
+                .setTitle(activity.getString(R.string.request_location_dialog_title_accepted, encodedFriendEmail.replace(',', '.')))
+                .setMessage(activity.getString(R.string.request_location_accepted_message, encodedFriendEmail.replace(',', '.')))
                 .setPositiveButton(R.string.request_location_accepted_go_to_map, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -84,12 +91,13 @@ public class SentRequestsDialog {
 
     private void declinedRequest() {
         new AlertDialog.Builder(activity)
-                .setTitle(activity.getString(R.string.request_location_dialog_title_declined, friendEmail.replace(',', '.')))
+                .setTitle(activity.getString(R.string.request_location_dialog_title_declined, encodedFriendEmail.replace(',', '.')))
                 .setMessage(R.string.request_location_declined_message)
                 .setPositiveButton(R.string.request_location_resend_request, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        sendRequest(user, System.currentTimeMillis(), friendEmail, reference);
+                        sendRequest(reference);
+                        requestList(reference);
                         Toast.makeText(activity, "Request Sent", Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -97,25 +105,10 @@ public class SentRequestsDialog {
 
     }
 
-    private void sendRequest(String currentUser, Long time, String friendName, DatabaseReference reference) {
-        requestList(currentUser, friendName, reference, time);
-        String originalEmail = currentUser.replace(',', '.');
-        reference = reference.child(friendName).child(NOTIFICATIONS).child(PENDING_REQUESTS);
-        reference.child(currentUser).setValue(new PendingRequestHelperClass(originalEmail, time));
-    }
-
-    //records the sent notification on the current user
-    private void requestList(String currentUser, String friendName, DatabaseReference reference, Long time) {
-        String email = friendName.replace(',', '.');
-        reference = reference.child(currentUser).child(SENT_REQUESTS);
-        reference.child(friendName).setValue(new SentRequestHelperClass(email, time, "Pending"));
-    }
-
-
     private void cancelRequest() {
         new AlertDialog.Builder(activity)
                 .setTitle(activity.getString(R.string.request_location_dialog_title))
-                .setMessage(friendEmail.replace(',', '.'))
+                .setMessage(encodedFriendEmail.replace(',', '.'))
                 .setPositiveButton(activity.getText(R.string.request_location_delete), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
@@ -127,16 +120,26 @@ public class SentRequestsDialog {
                 .show();
     }
 
+    private void sendRequest(DatabaseReference reference) {
+        requestList(reference);
+        reference = reference.child(encodedFriendEmail).child(NOTIFICATIONS).child(PENDING_REQUESTS);
+        reference.child(encodedUserEmail).setValue(new PendingRequestHelperClass(decodedUserEmail, currentTime));
+    }
+
+    //records the sent notification on the current user
+    private void requestList(DatabaseReference reference) {
+        reference = reference.child(encodedUserEmail).child(SENT_REQUESTS).child(encodedFriendEmail);
+        reference.setValue(new SentRequestHelperClass(decodedFriendEmail, currentTime, "Pending"));
+    }
+
+
     private void removeRequestFromCurrentUser(DatabaseReference reference) {
-        reference = reference.child(user).child(SENT_REQUESTS).child(friendEmail);
+        reference = reference.child(encodedUserEmail).child(SENT_REQUESTS).child(encodedFriendEmail);
         reference.removeValue();
     }
 
     private void removeRequestFromFriend(DatabaseReference reference) {
-        reference = reference.child(friendEmail).child(NOTIFICATIONS).child(PENDING_REQUESTS).child(user);
+        reference = reference.child(encodedFriendEmail).child(NOTIFICATIONS).child(PENDING_REQUESTS).child(encodedUserEmail);
         reference.removeValue();
-
     }
-
-
 }

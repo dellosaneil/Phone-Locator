@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Dashboard.GoToMap.MapCurrentLocationActivity">
+    tools:context=".Dashboard.GoToMap.MapCurrentLocationActivity"
+    android:transitionName="mainDashBoard_toMap">
 
     <fragment
         android:id="@+id/map"

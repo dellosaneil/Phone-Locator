@@ -23,9 +23,9 @@ import com.lazybattley.phonetracker.RecyclerViewAdapters.NotificationAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.lazybattley.phonetracker.Dashboard.RequestLocation.RequestLocationPermission.TIME_SENT;
 import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
 import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.GlobalVariables.TIME_SENT;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
 public class NotificationActivity extends AppCompatActivity implements NotificationAdapter.NotificationClick {

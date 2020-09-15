@@ -4,6 +4,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class PhoneTrackHelperClass {
 
+    private String email;
     private double latitude;
     private double longitude;
     private boolean isActive;
@@ -12,7 +13,8 @@ public class PhoneTrackHelperClass {
     private int batteryPercent;
 
 
-    public PhoneTrackHelperClass(LatLng location, boolean isActive, String phoneModel, long updatedAt, int batteryPercent) {
+    public PhoneTrackHelperClass(String email, LatLng location, boolean isActive, String phoneModel, long updatedAt, int batteryPercent) {
+        this.email = email;
         this.latitude = location.latitude;
         this.longitude = location.longitude;
         this.isActive = isActive;
@@ -22,6 +24,10 @@ public class PhoneTrackHelperClass {
     }
 
     public PhoneTrackHelperClass() {}
+
+    public String getEmail() {
+        return email;
+    }
 
     public int getBatteryPercent() {
         return batteryPercent;

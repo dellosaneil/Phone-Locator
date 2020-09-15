@@ -93,9 +93,9 @@
             android:elevation="10dp"
             android:onClick="mainDashboard_options"
             android:tag="map"
-
             android:text="@string/main_dashboard_list_of_location"
             android:textColor="@color/darkBlack"
+            android:transitionName="mainDashBoard_toMap"
             app:cornerRadius="10dp" />
 
         <com.google.android.material.button.MaterialButton

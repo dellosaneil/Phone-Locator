@@ -20,7 +20,7 @@ import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
-import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAILS;
+import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAIL;
 
 public class SignUpActivityOne extends AppCompatActivity {
     private ProgressBar signUp_progressBar;
@@ -162,7 +162,7 @@ public class SignUpActivityOne extends AppCompatActivity {
 
     //Adds new user in the database
     private void addNewUser(String email, String childReference, String fullName) {
-        reference.child(childReference).child(USER_DETAILS).setValue(new SignUpHelperClass(childReference, email, fullName, "No Phone"));
+        reference.child(childReference).child(USER_DETAIL).setValue(new SignUpHelperClass(childReference, email, fullName, "No Phone"));
     }
 
 

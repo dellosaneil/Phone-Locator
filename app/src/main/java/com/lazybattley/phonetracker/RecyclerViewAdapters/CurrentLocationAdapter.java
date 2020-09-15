@@ -6,6 +6,7 @@ import android.location.Geocoder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -27,9 +28,6 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
     private Context context;
     private List<CurrentLocationHelperClass> details;
 
-    public CurrentLocationAdapter(List<CurrentLocationHelperClass> details) {
-        this.details = details;
-    }
 
     @NonNull
     @Override
@@ -41,12 +39,16 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
 
     @Override
     public void onBindViewHolder(@NonNull CurrentLocationViewHolder holder, int position) {
-       String[] currentTime = milliSecondsToDate(details.get(position).getLastUpdated());
-       String address = getGeoCode(details.get(position).getCoordinates());
-       String fullName = details.get(position).getFullName();
+        CurrentLocationHelperClass detail = details.get(position);
+        String[] currentTime = milliSecondsToDate(detail.getLastUpdated());
+        String address = getGeoCode(detail.getCoordinates());
+        String fullName = detail.getFullName();
+
+
        holder.currentLocation_exactTime.setText(context.getString(R.string.current_location_summary_time, currentTime[0], currentTime[1]));
        holder.currentLocation_location.setText(address);
        holder.currentLocation_fullName.setText(fullName);
+       holder.currentLocation_image.setImageResource(R.drawable.ic_location);
     }
 
     private String[] milliSecondsToDate(long time){
@@ -74,6 +76,11 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
     }
 
 
+    public void setData(List<CurrentLocationHelperClass> details){
+        this.details = details;
+        notifyDataSetChanged();
+    }
+
 
     @Override
     public int getItemCount() {
@@ -88,12 +95,14 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         private TextView currentLocation_exactTime;
         private TextView currentLocation_location;
         private TextView currentLocation_fullName;
+        private ImageView currentLocation_image;
 
         public CurrentLocationViewHolder(@NonNull View itemView) {
             super(itemView);
             currentLocation_exactTime = itemView.findViewById(R.id.currentLocation_exactTime);
             currentLocation_location = itemView.findViewById(R.id.currentLocation_location);
             currentLocation_fullName = itemView.findViewById(R.id.currentLocation_fullName);
+            currentLocation_image = itemView.findViewById(R.id.currentLocation_image);
         }
     }
 }

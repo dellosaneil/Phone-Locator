@@ -19,6 +19,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.Dashboard.GoToMap.MapCurrentLocationActivity;
 import com.lazybattley.phonetracker.Dashboard.Notifications.NotificationActivity;
 import com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity;
 import com.lazybattley.phonetracker.Dashboard.RequestLocation.RequestLocationPermission;
@@ -38,6 +39,7 @@ public class MainDashBoardActivity extends AppCompatActivity {
     private ImageView mainDashBoard_notificationBell;
     private MaterialButton mainDashBoard_requestLocation;
     private MaterialButton mainDashBoard_registerOrUnregister;
+    private MaterialButton mainDashBoard_goToMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +50,7 @@ public class MainDashBoardActivity extends AppCompatActivity {
         mainDashBoard_notificationBell = findViewById(R.id.mainDashBoard_notificationBell);
         mainDashboard_bellCardView = findViewById(R.id.mainDashboard_bellCardView);
         mainDashBoard_notificationCounter = findViewById(R.id.mainDashBoard_notificationCounter);
+        mainDashBoard_goToMap = findViewById(R.id.mainDashBoard_goToMap);
         ENCODED_EMAIL = encodeEmail(FirebaseAuth.getInstance().getCurrentUser().getEmail());
         rootNode = FirebaseDatabase.getInstance().getReference(USERS);
         rootNode.child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).addValueEventListener(new ValueEventListener() {
@@ -92,7 +95,7 @@ public class MainDashBoardActivity extends AppCompatActivity {
                 break;
 
             case "map":
-
+                goToMapView();
                 break;
 
             case "settings":
@@ -119,6 +122,13 @@ public class MainDashBoardActivity extends AppCompatActivity {
         Intent intent = new Intent(this, RequestLocationPermission.class);
         Pair<View, String> pair = new Pair(mainDashBoard_requestLocation, "mainDashboard_toRequest");
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, pair);
+        startActivity(intent, options.toBundle());
+    }
+
+    private void goToMapView(){
+        Intent intent = new Intent(this, MapCurrentLocationActivity.class);
+        Pair<View, String> pair = new Pair(mainDashBoard_goToMap, "mainDashBoard_toMap");
+        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this,pair);
         startActivity(intent, options.toBundle());
     }
 

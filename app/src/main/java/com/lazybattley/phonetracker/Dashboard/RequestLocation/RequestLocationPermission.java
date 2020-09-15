@@ -39,14 +39,17 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private boolean isUser;
     private RecyclerView requestLocation_sentRequests;
     private List<SentRequestHelperClass> sentRequests;
-    private String currentUser;
+    private String encodedUserEmail;
     private DatabaseReference reference;
     private Toast toast;
-    public static final String TIME_SENT = "timeSent";
+    private final String TIME_SENT = "timeSent";
     private LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
     private ProgressBar progressBar;
     private RequestLocationAdapter adapter;
-    private String friendEmail;
+    private String decodedFriendEmail;
+    private String encodedFriendEmail;
+    private String decodedUserEmail;
+    private long currentTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,36 +58,33 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         progressBar = findViewById(R.id.progressBar);
         requestLocation_friendEmail = findViewById(R.id.requestLocation_friendEmail);
         requestLocation_sentRequests = findViewById(R.id.requestLocation_sentRequests);
-        currentUser = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
+        encodedUserEmail = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
+        decodedUserEmail = encodedUserEmail.replace(',', '.');
         reference = FirebaseDatabase.getInstance().getReference(USERS);
         initializeRecyclerView(reference);
 
     }
 
     public void locationUpdate(View view) {
-        friendEmail = requestLocation_friendEmail.getEditText().getText().toString();
-        String friendName = (requestLocation_friendEmail.getEditText().getText().toString()).replace('.', ',');
-        checkStatus(reference, friendName);
-
-
+        decodedFriendEmail = requestLocation_friendEmail.getEditText().getText().toString();
+        encodedFriendEmail = decodedFriendEmail.replace('.', ',');
+        checkStatus(reference);
     }
 
 
     //asks friend to get access to current location.
     private void requestLocationUpdate() {
-        Long currentTime = System.currentTimeMillis();
+        currentTime = System.currentTimeMillis();
         //converting email into String that can be used as Reference
-        currentUser = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
-        String friendName = (requestLocation_friendEmail.getEditText().getText().toString()).replace('.', ',');
-        if (!friendName.equals(currentUser)) {
-            Query query = reference.child(friendName);
+        if (!encodedFriendEmail.equals(encodedUserEmail)) {
+            Query query = reference.child(encodedFriendEmail);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     //checks whether user is in database
                     isUser = snapshot.exists();
                     if (isUser) {
-                        sendRequest(currentUser, currentTime, friendName, reference);
+                        sendRequest(reference);
                         requestLocation_friendEmail.setError(null);
                         requestLocation_friendEmail.setErrorEnabled(false);
                         if (toast != null) {
@@ -110,10 +110,10 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
 
     }
 
-    private void checkStatus(DatabaseReference reference, String decodedFriendEmail) {
-        if (checkInput(friendEmail)) {
-            Query query = reference.child(currentUser).child(SENT_REQUESTS).child(decodedFriendEmail);
-            query.addValueEventListener(new ValueEventListener() {
+    private void checkStatus(DatabaseReference reference) {
+        if (checkInput(decodedFriendEmail)) {
+            Query query = reference.child(encodedUserEmail).child(SENT_REQUESTS).child(encodedFriendEmail);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
@@ -133,8 +133,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
                 }
             });
         }
-
-
     }
 
 
@@ -148,23 +146,21 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     }
 
     //send the request notification to the friend
-    private void sendRequest(String currentUser, Long time, String friendName, DatabaseReference reference) {
-        requestList(currentUser, friendName, reference, time);
-        String originalEmail = currentUser.replace(',', '.');
-        reference = reference.child(friendName).child(NOTIFICATIONS).child(PENDING_REQUESTS);
-        reference.child(currentUser).setValue(new PendingRequestHelperClass(originalEmail, time));
+    private void sendRequest(DatabaseReference reference) {
+        requestList(reference);
+        reference = reference.child(encodedFriendEmail).child(NOTIFICATIONS).child(PENDING_REQUESTS);
+        reference.child(encodedUserEmail).setValue(new PendingRequestHelperClass(decodedUserEmail, currentTime));
     }
 
     //records the sent notification on the current user
-    private void requestList(String currentUser, String friendName, DatabaseReference reference, Long time) {
-        String email = friendName.replace(',', '.');
-        reference = reference.child(currentUser).child(SENT_REQUESTS);
-        reference.child(friendName).setValue(new SentRequestHelperClass(email, time, "Pending"));
+    private void requestList(DatabaseReference reference) {
+        reference = reference.child(encodedUserEmail).child(SENT_REQUESTS);
+        reference.child(encodedFriendEmail).setValue(new SentRequestHelperClass(decodedFriendEmail, currentTime, "Pending"));
     }
 
     private void initializeRecyclerView(DatabaseReference reference) {
         new Thread(() -> {
-            Query query = reference.child(currentUser).child(SENT_REQUESTS).orderByChild(TIME_SENT);
+            Query query = reference.child(encodedUserEmail).child(SENT_REQUESTS).orderByChild(TIME_SENT);
             query.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -189,8 +185,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
                 }
             });
         }).start();
-
-
     }
 
 

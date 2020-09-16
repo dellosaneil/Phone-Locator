@@ -5,6 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -14,8 +15,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,7 +38,7 @@ import java.util.List;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
-public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick {
 
     private GoogleMap mMap;
     private RecyclerView currentLocation_summary;
@@ -46,7 +49,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     private String encodedUserEmail;
     private CurrentLocationAdapter adapter;
     private LinearLayoutManager linearLayoutManager;
-
+    private boolean mapReady = false;
+    private boolean dataReady = false;
+    private boolean exit = false;
+    private boolean track = false;
+    private int indexNumber;
+    private MarkerOptions marker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +67,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         encodedUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace('.', ',');
         reference = FirebaseDatabase.getInstance().getReference(USERS);
         currentLocation_summary = findViewById(R.id.currentLocation_summary);
-        adapter = new CurrentLocationAdapter();
+        adapter = new CurrentLocationAdapter(this);
         currentLocation_summary.setAdapter(adapter);
         linearLayoutManager = new LinearLayoutManager(this);
         currentLocation_summary.setLayoutManager(linearLayoutManager);
@@ -68,7 +76,9 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
 
     private void initializeRecyclerView() {
-        new Thread(() -> {setMainPhoneEmail(reference);}).start();
+        new Thread(() -> {
+            setMainPhoneEmail(reference);
+        }).start();
 
     }
 
@@ -102,13 +112,14 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         for (MainPhoneEmailHelperClass essentials : mainPhoneEmail) {
             if (!essentials.getMainPhone().equals("No Phone")) {
                 query = reference.child(essentials.getEmail()).child(REGISTERED_DEVICES).child(essentials.getMainPhone());
+                Query finalQuery = query;
                 query.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if(snapshot.exists()){
+                        if (snapshot.exists()) {
                             PhoneTrackHelperClass currentLocations = snapshot.getValue(PhoneTrackHelperClass.class);
                             int index = checkIndexNumber(currentLocations.getEmail());
-                            if(locationDetails.size() > index){
+                            if (locationDetails.size() > index) {
                                 locationDetails.remove(index);
                             }
                             locationDetails.add(index, new CurrentLocationHelperClass(currentLocations.getEmail(),
@@ -116,12 +127,23 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                                     currentLocations.getUpdatedAt()));
                             if (locationDetails.size() == mainPhoneEmail.size()) {
                                 adapter.setData(locationDetails);
+                                dataReady = true;
+                            }
+                            if (mapReady && track && (index == indexNumber)) {
+                                if (marker != null) {
+                                    mMap.clear();
+                                }
+                                updateMapFocus();
+                            }
+                            if (exit) {
+                                finalQuery.removeEventListener(this);
                             }
                         }
                     }
+
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-
+                        Toast.makeText(MapCurrentLocationActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
             } else {
@@ -129,6 +151,28 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             }
         }
     }
+
+
+    @Override
+    public void onPersonClick(int position) {
+        if (dataReady) {
+            indexNumber = position;
+            track = true;
+            updateMapFocus();
+        } else {
+            Toast.makeText(this, "Please wait for awhile data is loading", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    private void updateMapFocus() {
+        LatLng loc = locationDetails.get((indexNumber)).getCoordinates();
+        marker = new MarkerOptions().position(loc).title(locationDetails.get(indexNumber).getFullName());
+        mMap.addMarker(marker);
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 20));
+    }
+
 
     private int checkIndexNumber(String coordinateEmail) {
         for (int i = 0; i < mainPhoneEmail.size(); i++) {
@@ -138,7 +182,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         }
         return -1;
     }
-
 
     /**
      * Manipulates the map once available.
@@ -152,10 +195,15 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mapReady = true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        exit = true;
+        super.onBackPressed();
+
     }
 }

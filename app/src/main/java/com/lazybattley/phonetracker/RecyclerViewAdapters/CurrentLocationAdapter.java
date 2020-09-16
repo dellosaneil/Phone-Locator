@@ -27,14 +27,18 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
 
     private Context context;
     private List<CurrentLocationHelperClass> details;
+    private OnPersonClick onPersonClick;
 
+    public CurrentLocationAdapter(OnPersonClick onPersonClick) {
+        this.onPersonClick = onPersonClick;
+    }
 
     @NonNull
     @Override
     public CurrentLocationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_current_location_summary, parent, false);
         context = parent.getContext();
-        return new CurrentLocationViewHolder(view);
+        return new CurrentLocationViewHolder(view, onPersonClick);
     }
 
     @Override
@@ -90,19 +94,33 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         return details.size();
     }
 
-    public static class CurrentLocationViewHolder extends RecyclerView.ViewHolder {
+    public static class CurrentLocationViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private TextView currentLocation_exactTime;
         private TextView currentLocation_location;
         private TextView currentLocation_fullName;
         private ImageView currentLocation_image;
+        private OnPersonClick onPersonClick;
 
-        public CurrentLocationViewHolder(@NonNull View itemView) {
+        public CurrentLocationViewHolder(@NonNull View itemView, OnPersonClick onPersonClick) {
             super(itemView);
+            itemView.setOnClickListener(this);
+            this.onPersonClick = onPersonClick;
             currentLocation_exactTime = itemView.findViewById(R.id.currentLocation_exactTime);
             currentLocation_location = itemView.findViewById(R.id.currentLocation_location);
             currentLocation_fullName = itemView.findViewById(R.id.currentLocation_fullName);
             currentLocation_image = itemView.findViewById(R.id.currentLocation_image);
         }
+
+        @Override
+        public void onClick(View view) {
+            onPersonClick.onPersonClick(getAdapterPosition());
+        }
     }
+    public interface OnPersonClick{
+        void onPersonClick(int position);
+
+    }
+
+
 }

@@ -1,7 +1,5 @@
 package com.lazybattley.phonetracker;
 
-import android.os.Build;
-
 public class GlobalVariables {
 
 
@@ -9,7 +7,6 @@ public class GlobalVariables {
     public static final String USERS = "users";
     public static final String USER_DETAIL = "user_detail";
     public static final String REGISTERED_DEVICES = "registered_devices";
-    public static final String BUILD_MODEL = Build.MODEL;
 
     public static final String ACTIVE = "active";
 

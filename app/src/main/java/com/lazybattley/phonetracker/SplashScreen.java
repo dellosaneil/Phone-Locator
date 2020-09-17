@@ -47,10 +47,10 @@ public class SplashScreen extends AppCompatActivity {
         BUILD_ID = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         auth = FirebaseAuth.getInstance();
 
-        SharedPreferences temp = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = temp.edit();
-        editor.putBoolean("isRegistered", false);
-        editor.apply();
+//        SharedPreferences temp = PreferenceManager.getDefaultSharedPreferences(this);
+//        SharedPreferences.Editor editor = temp.edit();
+//        editor.putBoolean("isRegistered", false);
+//        editor.apply();
 
         loggedIn();
     }

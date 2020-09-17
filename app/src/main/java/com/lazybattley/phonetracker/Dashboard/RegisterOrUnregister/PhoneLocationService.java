@@ -22,24 +22,23 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
 import com.lazybattley.phonetracker.R;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.BUILD_ID;
-import static com.lazybattley.phonetracker.GlobalVariables.BUILD_MODEL;
+import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
-import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
+import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service {
@@ -47,6 +46,13 @@ public class PhoneLocationService extends Service {
     private volatile static boolean state;
     private ExecutorService executorService;
     private Handler handler;
+
+    public static final String ACTIVE = "active";
+    public static final String BATTERY_PERCENT = "batteryPercent";
+    public static final String LATITUDE = "latitude";
+    public static final String LONGITUDE = "longitude";
+    public static final String UPDATE_AT = "updatedAt";
+
 
     @Override
     public void onCreate() {
@@ -95,13 +101,12 @@ public class PhoneLocationService extends Service {
         private Context context;
         private LocationCallback locationCallback;
         private DatabaseReference reference;
-        private LatLng loc;
         private BatteryManager batteryManager;
         private int batteryLevel;
         private long updatedAt;
         private Executor executor;
         private Handler handler;
-        private String buildId;
+        private Map<String, Object> updateMainPhone;
 
 
         @Override
@@ -122,9 +127,8 @@ public class PhoneLocationService extends Service {
             this.executor = executor;
             this.handler = handler;
             this.context = context;
-            this.buildId = buildId;
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-            reference = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES);
+            reference = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
             locationRequest = new LocationRequest();
             locationRequest.setInterval(3000);
             locationRequest.setFastestInterval(2500);
@@ -142,10 +146,15 @@ public class PhoneLocationService extends Service {
                     if (!state) {
                         stopUpdate();
                     } else {
+                        updateMainPhone = new HashMap<>();
                         updatedAt = System.currentTimeMillis();
-                        loc = new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude());
                         batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-                        reference.child(buildId).setValue(new PhoneTrackHelperClass(ENCODED_EMAIL, loc, true, BUILD_MODEL, updatedAt, batteryLevel));
+                        updateMainPhone.put(ACTIVE, true);
+                        updateMainPhone.put(BATTERY_PERCENT, batteryLevel);
+                        updateMainPhone.put(LATITUDE, locationResult.getLastLocation().getLatitude());
+                        updateMainPhone.put(LONGITUDE, locationResult.getLastLocation().getLongitude());
+                        updateMainPhone.put(UPDATE_AT, updatedAt);
+                        reference.updateChildren(updateMainPhone);
                     }
                 }
             };

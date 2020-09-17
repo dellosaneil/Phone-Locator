@@ -8,19 +8,26 @@ public class PhoneTrackHelperClass {
     private double latitude;
     private double longitude;
     private boolean isActive;
-    private String phoneModel;
     private long updatedAt;
     private int batteryPercent;
+    private String deviceName;
 
 
-    public PhoneTrackHelperClass(String email, LatLng location, boolean isActive, String phoneModel, long updatedAt, int batteryPercent) {
+    public PhoneTrackHelperClass(String email, LatLng location, boolean isActive, long updatedAt, int batteryPercent) {
         this.email = email;
         this.latitude = location.latitude;
         this.longitude = location.longitude;
         this.isActive = isActive;
-        this.phoneModel = phoneModel;
         this.updatedAt = updatedAt;
         this.batteryPercent = batteryPercent;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
     }
 
     public PhoneTrackHelperClass() {}
@@ -35,10 +42,6 @@ public class PhoneTrackHelperClass {
 
     public long getUpdatedAt() {
         return updatedAt;
-    }
-
-    public String getPhoneModel() {
-        return phoneModel;
     }
 
     public double getLatitude() {

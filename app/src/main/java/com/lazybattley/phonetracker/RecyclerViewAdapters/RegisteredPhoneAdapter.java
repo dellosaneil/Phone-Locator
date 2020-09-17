@@ -1,6 +1,7 @@
 package com.lazybattley.phonetracker.RecyclerViewAdapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Handler;
@@ -24,16 +25,15 @@ import java.util.Locale;
 public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhoneAdapter.RegisteredPhoneViewHolder> {
 
     private Context context;
-    private List<String> model;
     private List<LatLng> coordinates;
     private List<Integer> batteryLevel;
+    private List<String> deviceName;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
 
 
-    public RegisteredPhoneAdapter(Context context, List<String> model, List<LatLng> coordinates, List<Integer> batteryLevel, RecyclerView recyclerView, ProgressBar progressBar) {
-        this.context = context;
-        this.model = model;
+    public RegisteredPhoneAdapter(List<String> deviceName ,List<LatLng> coordinates, List<Integer> batteryLevel, RecyclerView recyclerView, ProgressBar progressBar) {
+        this.deviceName = deviceName;
         this.coordinates = coordinates;
         this.batteryLevel = batteryLevel;
         this.recyclerView = recyclerView;
@@ -43,23 +43,23 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
     @NonNull
     @Override
     public RegisteredPhoneAdapter.RegisteredPhoneViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        this.context = parent.getContext();
         View view = LayoutInflater.from(context).inflate(R.layout.row_registered_phones, parent, false);
+
         return new RegisteredPhoneViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull RegisteredPhoneAdapter.RegisteredPhoneViewHolder holder, int position) {
-        String phoneModel = model.get(position);
         LatLng location = coordinates.get(position);
         final String[] address = {null};
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-        if (position == model.size() - 1) {
+        if (position == coordinates.size() - 1) {
             recyclerView.setVisibility(View.VISIBLE);
             progressBar.setVisibility(View.INVISIBLE);
         }
 
         final LatLng finalLocation = location;
-        final String finalPhoneModel = phoneModel;
 
         new Thread(() -> {
             try {
@@ -73,9 +73,9 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    holder.registeredPhoneAdapter_phoneModel.setText(finalPhoneModel);
+                    holder.registeredPhoneAdapter_deviceName.setText(deviceName.get(position));
                     holder.registeredPhoneAdapter_phoneLocation.setText(address[0]);
-                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getText(R.string.registered_phone_battery_level) + " " + batteryLevel.get(position) + "%");
+                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getString(R.string.registered_phone_battery_level, batteryLevel.get(position)));
                 }
             });
         }).start();
@@ -84,23 +84,23 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
 
     @Override
     public int getItemCount() {
-        if (model == null) {
+        if (coordinates == null) {
             return 0;
         }
-        return model.size();
+        return coordinates.size();
     }
 
 
     public static class RegisteredPhoneViewHolder extends RecyclerView.ViewHolder {
-        private TextView registeredPhoneAdapter_phoneModel;
         private TextView registeredPhoneAdapter_phoneLocation;
         private TextView registeredPhoneAdapter_batteryLevel;
+        private TextView registeredPhoneAdapter_deviceName;
 
         public RegisteredPhoneViewHolder(@NonNull View itemView) {
             super(itemView);
-            registeredPhoneAdapter_phoneModel = itemView.findViewById(R.id.registeredPhoneAdapter_phoneModel);
             registeredPhoneAdapter_phoneLocation = itemView.findViewById(R.id.registeredPhoneAdapter_phoneLocation);
             registeredPhoneAdapter_batteryLevel = itemView.findViewById(R.id.registeredPhoneAdapter_batteryLevel);
+            registeredPhoneAdapter_deviceName = itemView.findViewById(R.id.registeredPhoneAdapter_deviceName);
         }
     }
 }

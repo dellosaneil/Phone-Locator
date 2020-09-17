@@ -23,7 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        map:layout_constraintGuide_percent="0.5649795" />
+        map:layout_constraintGuide_percent="0.56" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/currentLocation_summary"
@@ -32,7 +32,7 @@
         map:layout_constraintBottom_toBottomOf="parent"
         map:layout_constraintEnd_toEndOf="parent"
         map:layout_constraintStart_toStartOf="parent"
-        map:layout_constraintTop_toBottomOf="@+id/map" />
+        map:layout_constraintTop_toBottomOf="@+id/map"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

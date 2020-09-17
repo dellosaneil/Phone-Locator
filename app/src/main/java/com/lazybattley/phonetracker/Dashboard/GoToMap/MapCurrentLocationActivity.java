@@ -56,6 +56,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     private int indexNumber;
     private MarkerOptions marker;
 
+    private static final String TAG = "MapCurrentLocationActiv";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,6 +118,9 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         if (snapshot.exists()) {
+                            if (exit) {
+                                finalQuery.removeEventListener(this);
+                            }
                             PhoneTrackHelperClass currentLocations = snapshot.getValue(PhoneTrackHelperClass.class);
                             int index = checkIndexNumber(currentLocations.getEmail());
                             if (locationDetails.size() > index) {
@@ -134,9 +138,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                                     mMap.clear();
                                 }
                                 updateMapFocus();
-                            }
-                            if (exit) {
-                                finalQuery.removeEventListener(this);
                             }
                         }
                     }
@@ -196,13 +197,13 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        // Add a marker in Sydney and move the camera
         mapReady = true;
     }
 
     @Override
     public void onBackPressed() {
         exit = true;
+        finish();
         super.onBackPressed();
 
     }

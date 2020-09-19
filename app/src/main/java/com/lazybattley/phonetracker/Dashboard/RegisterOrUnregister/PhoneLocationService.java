@@ -11,6 +11,7 @@ import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -34,6 +35,7 @@ import java.util.concurrent.Executors;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.BUILD_ID;
+import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.FROM_ACTIVITY;
 import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
 import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
@@ -41,11 +43,12 @@ import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
-public class PhoneLocationService extends Service {
+public class PhoneLocationService extends Service implements BatteryDrainHandler {
 
     private volatile static boolean state;
     private ExecutorService executorService;
     private Handler handler;
+    private PhoneLocationTracker locationTracker;
 
     public static final String ACTIVE = "active";
     public static final String BATTERY_PERCENT = "batteryPercent";
@@ -53,12 +56,14 @@ public class PhoneLocationService extends Service {
     public static final String LONGITUDE = "longitude";
     public static final String UPDATE_AT = "updatedAt";
 
-
+    private static final String TAG = "PhoneLocationService";
+    
     @Override
     public void onCreate() {
         super.onCreate();
         executorService = Executors.newFixedThreadPool(1);
         handler = HandlerCompat.createAsync(Looper.getMainLooper());
+
     }
 
     @Nullable
@@ -69,18 +74,27 @@ public class PhoneLocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        state = intent.getBooleanExtra(IS_REGISTERED, false);
-        String buildId = intent.getStringExtra(BUILD_ID);
-        PhoneLocationTracker locationTracker = new PhoneLocationTracker(this, buildId, executorService, handler);
-        Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, LOCATION_REQUEST_CODE, notificationIntent, 0);
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle(getString(R.string.location_service_turned_on))
-                .setContentText(getString(R.string.location_service_tracked))
-                .setSmallIcon(R.drawable.current_location)
-                .setContentIntent(pendingIntent)
-                .build();
-        startForeground(LOCATION_REQUEST_FOREGROUND_CODE, notification);
+        boolean isFromActivity = intent.getBooleanExtra(FROM_ACTIVITY, false);
+        Log.i(TAG, "onStartCommand: " + isFromActivity);
+        if(isFromActivity){
+            state = intent.getBooleanExtra(IS_REGISTERED, false);
+            String buildId = intent.getStringExtra(BUILD_ID);
+            locationTracker = new PhoneLocationTracker(this, buildId, executorService, handler, this, this);
+            Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, LOCATION_REQUEST_CODE, notificationIntent, 0);
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle(getString(R.string.location_service_turned_on))
+                    .setContentText(getString(R.string.location_service_tracked))
+                    .setSmallIcon(R.drawable.current_location)
+                    .setContentIntent(pendingIntent)
+                    .build();
+            startForeground(LOCATION_REQUEST_FOREGROUND_CODE, notification);
+            handleEvent();
+        }
+        return START_STICKY;
+    }
+
+    private void handleEvent() {
         if (state) {
             locationTracker.runThread();
         } else {
@@ -89,9 +103,14 @@ public class PhoneLocationService extends Service {
             executorService.shutdownNow();
             stopForeground(true);
         }
-        return START_STICKY;
     }
 
+
+    @Override
+    public void batteryDrained(boolean off) {
+        state = off;
+        handleEvent();
+    }
 
 //************************************************************************************************************************************************************
 
@@ -106,8 +125,8 @@ public class PhoneLocationService extends Service {
         private long updatedAt;
         private Executor executor;
         private Handler handler;
-        private Map<String, Object> updateMainPhone;
-
+        private Map<String, Object> updateDevice;
+        private BatteryDrainHandler listener;
 
         @Override
         public void run() {
@@ -123,7 +142,8 @@ public class PhoneLocationService extends Service {
         }
 
 
-        public PhoneLocationTracker(Context context, String buildId, Executor executor, Handler handler) {
+        public PhoneLocationTracker(Context context, String buildId, Executor executor, Handler handler, PhoneLocationService phoneLocationService, BatteryDrainHandler listener) {
+            this.listener = listener;
             this.executor = executor;
             this.handler = handler;
             this.context = context;
@@ -143,18 +163,20 @@ public class PhoneLocationService extends Service {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
+                    batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
                     if (!state) {
                         stopUpdate();
+                    } else if (batteryLevel < 30) {
+                        drainedBattery();
                     } else {
-                        updateMainPhone = new HashMap<>();
+                        updateDevice = new HashMap<>();
                         updatedAt = System.currentTimeMillis();
-                        batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-                        updateMainPhone.put(ACTIVE, true);
-                        updateMainPhone.put(BATTERY_PERCENT, batteryLevel);
-                        updateMainPhone.put(LATITUDE, locationResult.getLastLocation().getLatitude());
-                        updateMainPhone.put(LONGITUDE, locationResult.getLastLocation().getLongitude());
-                        updateMainPhone.put(UPDATE_AT, updatedAt);
-                        reference.updateChildren(updateMainPhone);
+                        updateDevice.put(ACTIVE, true);
+                        updateDevice.put(BATTERY_PERCENT, batteryLevel);
+                        updateDevice.put(LATITUDE, locationResult.getLastLocation().getLatitude());
+                        updateDevice.put(LONGITUDE, locationResult.getLastLocation().getLongitude());
+                        updateDevice.put(UPDATE_AT, updatedAt);
+                        reference.updateChildren(updateDevice);
                     }
                 }
             };
@@ -178,6 +200,18 @@ public class PhoneLocationService extends Service {
         private void stopUpdate() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
-    }
 
+        private void drainedBattery() {
+            updateDevice = new HashMap<>();
+            updateDevice.put(ACTIVE, false);
+            reference.updateChildren(updateDevice);
+            listener.batteryDrained(false);
+        }
+    }
 }
+
+interface BatteryDrainHandler {
+    void batteryDrained(boolean off);
+}
+
+

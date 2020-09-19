@@ -1,11 +1,13 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -15,10 +17,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,28 +35,29 @@ import com.lazybattley.phonetracker.RecyclerViewAdapters.CurrentLocationAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 
 public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick {
 
     private GoogleMap mMap;
-    private RecyclerView currentLocation_summary;
     private DatabaseReference reference;
     public static final String AVAILABLE_LOCATION = "available_location";
     private List<CurrentLocationHelperClass> locationDetails;
     private List<MainPhoneEmailHelperClass> mainPhoneEmail;
-    private String encodedUserEmail;
     private CurrentLocationAdapter adapter;
-    private LinearLayoutManager linearLayoutManager;
     private boolean mapReady = false;
     private boolean dataReady = false;
     private boolean exit = false;
     private boolean track = false;
     private int indexNumber;
     private MarkerOptions marker;
+    private volatile int zoomLevel;
+    public static final String ZOOM_LEVEL = "zoom";
+    private SharedPreferences.Editor editor;
 
-    private static final String TAG = "MapCurrentLocationActiv";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,14 +66,42 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        encodedUserEmail = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace('.', ',');
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        editor = sharedPreferences.edit();
+        zoomLevel = sharedPreferences.getInt(ZOOM_LEVEL, 16);
         reference = FirebaseDatabase.getInstance().getReference(USERS);
-        currentLocation_summary = findViewById(R.id.currentLocation_summary);
+        RecyclerView currentLocation_summary = findViewById(R.id.currentLocation_summary);
         adapter = new CurrentLocationAdapter(this);
         currentLocation_summary.setAdapter(adapter);
-        linearLayoutManager = new LinearLayoutManager(this);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         currentLocation_summary.setLayoutManager(linearLayoutManager);
         initializeRecyclerView();
+        initializeSeekBar();
+    }
+
+    private void initializeSeekBar() {
+        SeekBar currentLocation_zoom = findViewById(R.id.currentLocation_zoom);
+        currentLocation_zoom.setProgress(zoomLevel);
+        currentLocation_zoom.setMax(19);
+        currentLocation_zoom.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                zoomLevel = i + 1;
+                editor.putInt(ZOOM_LEVEL, zoomLevel);
+                editor.apply();
+                updateMapFocus();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
     }
 
 
@@ -80,12 +109,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         new Thread(() -> {
             setMainPhoneEmail(reference);
         }).start();
-
     }
 
     private void setMainPhoneEmail(DatabaseReference reference) {
         mainPhoneEmail = new ArrayList<>();
-        Query query = reference.child(encodedUserEmail).child(AVAILABLE_LOCATION);
+        Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -157,11 +185,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     @Override
     public void onPersonClick(int position) {
         if (dataReady) {
+            mMap.clear();
             indexNumber = position;
             track = true;
             updateMapFocus();
         } else {
-            Toast.makeText(this, "Please wait for awhile data is loading", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.current_location_summary_loading, Toast.LENGTH_SHORT).show();
         }
 
     }
@@ -171,7 +200,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         marker = new MarkerOptions().position(loc).title(locationDetails.get(indexNumber).getFullName());
         mMap.addMarker(marker);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, 20));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoomLevel));
     }
 
 

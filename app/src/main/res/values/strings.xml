@@ -102,6 +102,7 @@
 <!--    Current Location Summary-->
     <string name="current_location_summary_updated_at">Updated At:</string>
     <string name="current_location_summary_time">%1$s\n%2$s</string>
+    <string name="current_location_summary_loading">Loading…</string>
 
 
 
@@ -110,6 +111,7 @@
     <string name="dialog_register_phone_positive">Register</string>
     <string name="dialog_register_phone_negative">Cancel</string>
     <string name="dialog_register_phone_register_device">Register Device</string>
+
 
 
 

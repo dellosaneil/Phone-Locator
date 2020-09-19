@@ -47,7 +47,7 @@ import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.GlobalVariables.USERS;
 import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAIL;
 
-public class RegisterPhoneDashboardActivity extends AppCompatActivity implements RegisterPhoneDialog.PhoneDialogListener {
+public class RegisterPhoneDashboardActivity extends AppCompatActivity implements RegisterPhoneDialog.PhoneDialogListener{
 
     public static final String MAIN_PHONE = "mainPhone";
     private MaterialButton registerPhone_registerOrUnregisterButton;
@@ -66,6 +66,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     public static final String BUILD_ID = "buildId";
     public static final String DEVICE_NAME = "deviceName";
     public static final String EMAIL = "email";
+    public static final String FROM_ACTIVITY = "activity";
 
 
     @SuppressLint("HardwareIds")
@@ -92,7 +93,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     private void cardViewRegistration() {
         if (isRegistered) {
             String deviceName = PreferenceManager.getDefaultSharedPreferences(this).getString(DEVICE_NAME, null);
-            if(deviceName == null){
+            if (deviceName == null) {
                 isRegistered = false;
                 cardViewRegistration();
             }
@@ -155,6 +156,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
         serviceIntent.putExtra(IS_REGISTERED, state);
         serviceIntent.putExtra(BUILD_ID, buildId);
+        serviceIntent.putExtra(FROM_ACTIVITY, true);
         if (!state) {
             //Phone is currently not tracked
             startService(serviceIntent);
@@ -238,7 +240,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         initializePhone.put(EMAIL, ENCODED_EMAIL);
         initializePhone.put(DEVICE_NAME, phone);
         ref.updateChildren(initializePhone);
-
         registerMainPhone();
         SharedPreferences.Editor editor = preferences.edit();
         registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));

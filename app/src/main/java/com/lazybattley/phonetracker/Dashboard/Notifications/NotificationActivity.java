@@ -23,6 +23,7 @@ import com.lazybattley.phonetracker.RecyclerViewAdapters.NotificationAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
 import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
 import static com.lazybattley.phonetracker.GlobalVariables.TIME_SENT;
@@ -55,8 +56,7 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
 
     private void requests() {
         //Populate the RecyclerView with location request notifications.
-        String user = FirebaseAuth.getInstance().getCurrentUser().getEmail().replace('.', ',');
-        Query query = FirebaseDatabase.getInstance().getReference(USERS).child(user).child(NOTIFICATIONS).child(PENDING_REQUESTS).orderByChild(TIME_SENT);
+        Query query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).orderByChild(TIME_SENT);
         query.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {

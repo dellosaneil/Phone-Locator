@@ -44,5 +44,15 @@
         map:layout_constraintBottom_toBottomOf="@+id/map"
         map:layout_constraintEnd_toEndOf="parent" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:src="@drawable/ic_directions"
+        map:fabSize="mini"
+        map:layout_constraintEnd_toEndOf="@+id/map"
+        map:layout_constraintTop_toTopOf="@+id/map" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

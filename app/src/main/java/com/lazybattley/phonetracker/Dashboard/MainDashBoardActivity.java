@@ -26,13 +26,26 @@ import com.lazybattley.phonetracker.Dashboard.RequestLocation.RequestLocationPer
 import com.lazybattley.phonetracker.OptionsScreen;
 import com.lazybattley.phonetracker.R;
 
-import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+import java.util.Objects;
 
 public class MainDashBoardActivity extends AppCompatActivity {
 
-    private DatabaseReference rootNode;
+    public static final String IS_REGISTERED = "isRegistered";
+    public static final String USERS = "users";
+    public static final String USER_DETAIL = "user_detail";
+    public static final String REGISTERED_DEVICES = "registered_devices";
+
+    public static final String ACTIVE = "active";
+
+    public static final int LOCATION_REQUEST_CODE = 1;
+    public static final int LOCATION_REQUEST_FOREGROUND_CODE = 9;
+
+    public static final String PENDING_REQUESTS = "pending_requests";
+    public static final String SENT_REQUESTS = "sent_requests";
+    public static final String NOTIFICATIONS = "notifications";
+    public static final String TIME_SENT = "timeSent";
+    public static final String STATUS = "status";
+
     public static String ENCODED_EMAIL;
     private CardView mainDashboard_bellCardView;
     private TextView mainDashBoard_notificationCounter;
@@ -51,8 +64,8 @@ public class MainDashBoardActivity extends AppCompatActivity {
         mainDashboard_bellCardView = findViewById(R.id.mainDashboard_bellCardView);
         mainDashBoard_notificationCounter = findViewById(R.id.mainDashBoard_notificationCounter);
         mainDashBoard_goToMap = findViewById(R.id.mainDashBoard_goToMap);
-        ENCODED_EMAIL = encodeEmail(FirebaseAuth.getInstance().getCurrentUser().getEmail());
-        rootNode = FirebaseDatabase.getInstance().getReference(USERS);
+        ENCODED_EMAIL = encodeEmail(Objects.requireNonNull(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getEmail()));
+        DatabaseReference rootNode = FirebaseDatabase.getInstance().getReference(USERS);
         rootNode.child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -125,10 +138,10 @@ public class MainDashBoardActivity extends AppCompatActivity {
         startActivity(intent, options.toBundle());
     }
 
-    private void goToMapView(){
+    private void goToMapView() {
         Intent intent = new Intent(this, MapCurrentLocationActivity.class);
         Pair<View, String> pair = new Pair(mainDashBoard_goToMap, "mainDashBoard_toMap");
-        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this,pair);
+        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, pair);
         startActivity(intent, options.toBundle());
     }
 

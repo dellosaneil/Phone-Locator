@@ -90,7 +90,6 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
         return coordinates.size();
     }
 
-
     public static class RegisteredPhoneViewHolder extends RecyclerView.ViewHolder {
         private TextView registeredPhoneAdapter_phoneLocation;
         private TextView registeredPhoneAdapter_batteryLevel;

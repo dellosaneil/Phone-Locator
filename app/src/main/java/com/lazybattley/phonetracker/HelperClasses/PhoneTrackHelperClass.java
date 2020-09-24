@@ -22,6 +22,8 @@ public class PhoneTrackHelperClass {
         this.batteryPercent = batteryPercent;
     }
 
+    public PhoneTrackHelperClass() {}
+
     public String getDeviceName() {
         return deviceName;
     }
@@ -29,8 +31,6 @@ public class PhoneTrackHelperClass {
     public void setDeviceName(String deviceName) {
         this.deviceName = deviceName;
     }
-
-    public PhoneTrackHelperClass() {}
 
     public String getEmail() {
         return email;

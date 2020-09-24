@@ -11,7 +11,6 @@ import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -34,13 +33,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.IS_REGISTERED;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.LOCATION_REQUEST_CODE;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.LOCATION_REQUEST_FOREGROUND_CODE;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
 import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.BUILD_ID;
-import static com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity.FROM_ACTIVITY;
-import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
-import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_CODE;
-import static com.lazybattley.phonetracker.GlobalVariables.LOCATION_REQUEST_FOREGROUND_CODE;
-import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+
 import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service implements BatteryDrainHandler {
@@ -55,9 +54,8 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
     public static final String LATITUDE = "latitude";
     public static final String LONGITUDE = "longitude";
     public static final String UPDATE_AT = "updatedAt";
-
     private static final String TAG = "PhoneLocationService";
-    
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -74,10 +72,8 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        boolean isFromActivity = intent.getBooleanExtra(FROM_ACTIVITY, false);
-        Log.i(TAG, "onStartCommand: " + isFromActivity);
-        if(isFromActivity){
-            state = intent.getBooleanExtra(IS_REGISTERED, false);
+        state = intent.getBooleanExtra(IS_REGISTERED, false);
+        if(locationTracker == null || !state){
             String buildId = intent.getStringExtra(BUILD_ID);
             locationTracker = new PhoneLocationTracker(this, buildId, executorService, handler, this, this);
             Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
@@ -104,7 +100,6 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
             stopForeground(true);
         }
     }
-
 
     @Override
     public void batteryDrained(boolean off) {
@@ -182,7 +177,6 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
             };
         }
 
-
         private void startUpdate() {
             handler.post(() -> {
                 if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -196,11 +190,9 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                 }
             });
         }
-
         private void stopUpdate() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
-
         private void drainedBattery() {
             updateDevice = new HashMap<>();
             updateDevice.put(ACTIVE, false);

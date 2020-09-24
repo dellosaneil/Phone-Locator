@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -40,14 +41,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
-import static com.lazybattley.phonetracker.GlobalVariables.ACTIVE;
-import static com.lazybattley.phonetracker.GlobalVariables.IS_REGISTERED;
-import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
-import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAIL;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.IS_REGISTERED;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
-public class RegisterPhoneDashboardActivity extends AppCompatActivity implements RegisterPhoneDialog.PhoneDialogListener{
+
+public class RegisterPhoneDashboardActivity extends AppCompatActivity implements RegisterPhoneDialog.PhoneDialogListener {
 
     public static final String MAIN_PHONE = "mainPhone";
     private MaterialButton registerPhone_registerOrUnregisterButton;
@@ -66,7 +68,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     public static final String BUILD_ID = "buildId";
     public static final String DEVICE_NAME = "deviceName";
     public static final String EMAIL = "email";
-    public static final String FROM_ACTIVITY = "activity";
 
 
     @SuppressLint("HardwareIds")
@@ -132,7 +133,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         });
     }
 
-
     private void getCurrentStatus() {
         if (isRegistered) {
             isActive.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -152,14 +152,18 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         }
     }
 
+
     private void startLocationTrackingService() {
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
         serviceIntent.putExtra(IS_REGISTERED, state);
         serviceIntent.putExtra(BUILD_ID, buildId);
-        serviceIntent.putExtra(FROM_ACTIVITY, true);
         if (!state) {
             //Phone is currently not tracked
-            startService(serviceIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                this.startForegroundService(serviceIntent);
+            }else{
+                startService(serviceIntent);
+            }
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
             DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
             Map<String, Object> deviceStatusUpdate = new HashMap<>();
@@ -167,7 +171,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             update.updateChildren(deviceStatusUpdate);
         } else {
             //Phone is currently tracked
-            startService(serviceIntent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                this.startForegroundService(serviceIntent);
+            }else{
+                startService(serviceIntent);
+            }
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
         }
     }
@@ -248,4 +256,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         editor.apply();
         cardViewRegistration();
     }
+
+    public void backButton(View view){
+        onBackPressed();
+    }
+
+
+
 }

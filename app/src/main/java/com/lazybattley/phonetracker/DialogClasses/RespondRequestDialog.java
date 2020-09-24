@@ -6,7 +6,6 @@ import android.content.DialogInterface;
 
 import androidx.annotation.NonNull;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -21,11 +20,13 @@ import com.lazybattley.phonetracker.R;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.STATUS;
-import static com.lazybattley.phonetracker.GlobalVariables.SENT_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.NOTIFICATIONS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.SENT_REQUESTS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.STATUS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+
 
 public class RespondRequestDialog {
 
@@ -37,14 +38,12 @@ public class RespondRequestDialog {
     private Activity activity;
     private String encodedFriendEmail;
     private DatabaseReference reference;
-    private String encodedUserEmail;
     private volatile String availableUsersFullName;
     private volatile String acceptedUsersFullName;
 
     public RespondRequestDialog(Activity activity, String encodedFriendEmail) {
         this.activity = activity;
         this.encodedFriendEmail = encodedFriendEmail.replace('.', ',');
-        this.encodedUserEmail = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
         this.reference = FirebaseDatabase.getInstance().getReference(USERS);
         setAvailableLocationFullName(this.reference);
         setAcceptedUsersFullName(this.reference);
@@ -76,14 +75,14 @@ public class RespondRequestDialog {
     private void acceptedRequestFriend(final DatabaseReference reference) {
         long time = System.currentTimeMillis();
         String[] mainPhone = new String[1];
-        DatabaseReference query = FirebaseDatabase.getInstance().getReference(USERS).child(encodedUserEmail).child(USER_DETAILS);
+        DatabaseReference query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAILS);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 SignUpHelperClass details = snapshot.getValue(SignUpHelperClass.class);
                 mainPhone[0] = details.getMainPhone();
-                reference.child(encodedFriendEmail).child(AVAILABLE_LOCATIONS).child(encodedUserEmail)
-                        .setValue(new AvailableLocationHelperClass(availableUsersFullName, encodedUserEmail, time, mainPhone[0]));
+                reference.child(encodedFriendEmail).child(AVAILABLE_LOCATIONS).child(ENCODED_EMAIL)
+                        .setValue(new AvailableLocationHelperClass(availableUsersFullName, ENCODED_EMAIL, time, mainPhone[0]));
             }
 
             @Override
@@ -94,7 +93,7 @@ public class RespondRequestDialog {
     }
 
     private void setAvailableLocationFullName(DatabaseReference reference) {
-        Query query = reference.child(encodedUserEmail).child(USER_DETAILS);
+        Query query = reference.child(ENCODED_EMAIL).child(USER_DETAILS);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -129,7 +128,7 @@ public class RespondRequestDialog {
 
     //clears the notification from the user dashboard
     private void removeNotificationFromCurrentUser(DatabaseReference reference) {
-        reference = reference.child(encodedUserEmail).child(NOTIFICATIONS).child(PENDING_REQUESTS).child(encodedFriendEmail);
+        reference = reference.child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).child(encodedFriendEmail);
         reference.removeValue();
     }
 
@@ -138,14 +137,14 @@ public class RespondRequestDialog {
         Map<String, Object> temp = new HashMap<>();
         temp.put(STATUS, answer);
         reference = reference.child(encodedFriendEmail).child(SENT_REQUESTS)
-                .child(encodedUserEmail);
+                .child(ENCODED_EMAIL);
         reference.updateChildren(temp);
     }
 
 
     //reflected on current user table.
     private void acceptedRequestUser(DatabaseReference reference) {
-        reference = reference.child(encodedUserEmail).child(ACCEPTED_USERS).child(encodedFriendEmail);
+        reference = reference.child(ENCODED_EMAIL).child(ACCEPTED_USERS).child(encodedFriendEmail);
         reference.setValue(new AcceptedUsersHelperClass(acceptedUsersFullName, encodedFriendEmail.replace(',', '.'), System.currentTimeMillis()));
     }
 }

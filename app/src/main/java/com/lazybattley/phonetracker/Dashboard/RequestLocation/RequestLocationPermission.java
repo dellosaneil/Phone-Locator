@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -20,18 +19,20 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.DialogClasses.SentRequestsDialog;
-import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.PendingRequestHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.RequestLocationAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.SENT_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.NOTIFICATIONS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.SENT_REQUESTS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+
 
 public class RequestLocationPermission extends AppCompatActivity implements RequestLocationAdapter.RequestClicked {
 
@@ -39,7 +40,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private boolean isUser;
     private RecyclerView requestLocation_sentRequests;
     private List<SentRequestHelperClass> sentRequests;
-    private String encodedUserEmail;
     private DatabaseReference reference;
     private Toast toast;
     private final String TIME_SENT = "timeSent";
@@ -58,11 +58,9 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         progressBar = findViewById(R.id.progressBar);
         requestLocation_friendEmail = findViewById(R.id.requestLocation_friendEmail);
         requestLocation_sentRequests = findViewById(R.id.requestLocation_sentRequests);
-        encodedUserEmail = (FirebaseAuth.getInstance().getCurrentUser().getEmail()).replace('.', ',');
-        decodedUserEmail = encodedUserEmail.replace(',', '.');
+        decodedUserEmail = ENCODED_EMAIL.replace(',', '.');
         reference = FirebaseDatabase.getInstance().getReference(USERS);
         initializeRecyclerView(reference);
-
     }
 
     public void locationUpdate(View view) {
@@ -76,7 +74,7 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private void requestLocationUpdate() {
         currentTime = System.currentTimeMillis();
         //converting email into String that can be used as Reference
-        if (!encodedFriendEmail.equals(encodedUserEmail)) {
+        if (!encodedFriendEmail.equals(ENCODED_EMAIL)) {
             Query query = reference.child(encodedFriendEmail);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
@@ -112,7 +110,7 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
 
     private void checkStatus(DatabaseReference reference) {
         if (checkInput(decodedFriendEmail)) {
-            Query query = reference.child(encodedUserEmail).child(SENT_REQUESTS).child(encodedFriendEmail);
+            Query query = reference.child(ENCODED_EMAIL).child(SENT_REQUESTS).child(encodedFriendEmail);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -149,18 +147,18 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private void sendRequest(DatabaseReference reference) {
         requestList(reference);
         reference = reference.child(encodedFriendEmail).child(NOTIFICATIONS).child(PENDING_REQUESTS);
-        reference.child(encodedUserEmail).setValue(new PendingRequestHelperClass(decodedUserEmail, currentTime));
+        reference.child(ENCODED_EMAIL).setValue(new PendingRequestHelperClass(decodedUserEmail, currentTime));
     }
 
     //records the sent notification on the current user
     private void requestList(DatabaseReference reference) {
-        reference = reference.child(encodedUserEmail).child(SENT_REQUESTS);
+        reference = reference.child(ENCODED_EMAIL).child(SENT_REQUESTS);
         reference.child(encodedFriendEmail).setValue(new SentRequestHelperClass(decodedFriendEmail, currentTime, "Pending"));
     }
 
     private void initializeRecyclerView(DatabaseReference reference) {
         new Thread(() -> {
-            Query query = reference.child(encodedUserEmail).child(SENT_REQUESTS).orderByChild(TIME_SENT);
+            Query query = reference.child(ENCODED_EMAIL).child(SENT_REQUESTS).orderByChild(TIME_SENT);
             query.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -186,7 +184,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
             });
         }).start();
     }
-
 
     @Override
     public void requestClicked(int position) {

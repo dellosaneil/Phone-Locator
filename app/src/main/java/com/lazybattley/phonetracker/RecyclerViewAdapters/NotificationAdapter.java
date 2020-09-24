@@ -26,16 +26,15 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     private List<PendingRequestHelperClass> receivedRequests;
     private NotificationClick notificationClick;
 
-    public NotificationAdapter(Context context, List<PendingRequestHelperClass> receivedRequests, NotificationClick notificationClick) {
+    public NotificationAdapter(NotificationClick notificationClick) {
         this.notificationClick = notificationClick;
-        this.context = context;
-        this.receivedRequests = receivedRequests;
     }
 
     @NonNull
     @Override
     public NotificationViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(context).inflate(R.layout.row_notification, parent, false);
+        this.context = parent.getContext();
         return new NotificationViewHolder(view, notificationClick);
     }
 
@@ -44,10 +43,8 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
     public void onBindViewHolder(@NonNull NotificationViewHolder holder, int position) {
         String user = receivedRequests.get(position).getEmail();
         long time = receivedRequests.get(position).getTime();
-
         String date = DateFormat.getDateInstance().format(time);
         String hour = timeFormat(time);
-
         holder.rowNotification_user.setText(user);
         holder.rowNotification_imageType.setImageResource(R.drawable.ic_invite);
         holder.rowNotification_timeSent.setText(context.getString(R.string.request_location_time_sent, date, hour));
@@ -60,6 +57,10 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
         return formatter.format(new Date(time));
     }
 
+    public void setRequests(List<PendingRequestHelperClass> receivedRequests){
+        this.receivedRequests = receivedRequests;
+        notifyDataSetChanged();
+    }
 
     @Override
     public int getItemCount() {

@@ -3,6 +3,7 @@ package com.lazybattley.phonetracker;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.ImageView;
@@ -15,13 +16,10 @@ import com.lazybattley.phonetracker.LogInSignUp.LogInActivity;
 
 public class OptionsScreen extends AppCompatActivity {
 
-
     private ImageView user_log_in_image;
     private TextView user_log_in_text_view;
     private CardView logInSignUp;
-    private Intent intent;
-    private Pair<View, String>[] pairs;
-
+    private static final String TAG = "OptionsScreen";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,18 +34,17 @@ public class OptionsScreen extends AppCompatActivity {
     public void redirect(View view) {
         String tag = view.getTag().toString();
         if (tag.equals("1")) {
-            intent = new Intent(this, LogInActivity.class);
-            pairs = new Pair[3];
+            Intent intent = new Intent(this, LogInActivity.class);
+            Pair[] pairs = new Pair[3];
             pairs[0] = new Pair<>(user_log_in_text_view, "log_in_transition_text_view");
             pairs[1] = new Pair<>(user_log_in_image, "log_in_transition_logo");
             pairs[2] = new Pair<>(logInSignUp, "log_in_transition_button");
+            ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(this, pairs);
             intent.putExtra("time", System.nanoTime());
-            ActivityOptions option = ActivityOptions.makeSceneTransitionAnimation(OptionsScreen.this, pairs);
             startActivity(intent, option.toBundle());
 //            startActivity(intent);
         } else {
 //            startActivity(new Intent(this, PhoneLocator.class));
         }
     }
-
 }

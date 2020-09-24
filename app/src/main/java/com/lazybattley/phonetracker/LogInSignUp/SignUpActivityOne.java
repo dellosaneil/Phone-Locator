@@ -3,9 +3,7 @@ package com.lazybattley.phonetracker.LogInSignUp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,30 +17,26 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
-import static com.lazybattley.phonetracker.GlobalVariables.USER_DETAIL;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
+
 
 public class SignUpActivityOne extends AppCompatActivity {
     private ProgressBar signUp_progressBar;
-    private TextView signUp_message;
     private TextInputLayout signUp_fullName, signUp_password, signUp_email;
     private MaterialButton signUp_next;
-    private FirebaseDatabase rootNode;
     private DatabaseReference reference;
-    private ImageView imageView;
     private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_one);
-        rootNode = FirebaseDatabase.getInstance();
+        FirebaseDatabase rootNode = FirebaseDatabase.getInstance();
         reference = rootNode.getReference(USERS);
-        imageView = findViewById(R.id.imageView);
         signUp_email = findViewById(R.id.signUp_email);
         auth = FirebaseAuth.getInstance();
         signUp_progressBar = findViewById(R.id.signUp_progressBar);
-        signUp_message = findViewById(R.id.signUp_message);
         signUp_fullName = findViewById(R.id.signUp_fullName);
         signUp_password = findViewById(R.id.signUp_password);
         signUp_next = findViewById(R.id.signUp_next);

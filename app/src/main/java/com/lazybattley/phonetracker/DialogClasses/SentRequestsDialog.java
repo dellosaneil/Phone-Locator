@@ -20,10 +20,10 @@ import com.lazybattley.phonetracker.HelperClasses.PendingRequestHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
 import com.lazybattley.phonetracker.R;
 
-import static com.lazybattley.phonetracker.GlobalVariables.NOTIFICATIONS;
-import static com.lazybattley.phonetracker.GlobalVariables.PENDING_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.SENT_REQUESTS;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.NOTIFICATIONS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.PENDING_REQUESTS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.SENT_REQUESTS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
 
 
 public class SentRequestsDialog {

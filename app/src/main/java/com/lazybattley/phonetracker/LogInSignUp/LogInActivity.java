@@ -1,8 +1,5 @@
 package com.lazybattley.phonetracker.LogInSignUp;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,6 +11,9 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -39,11 +39,11 @@ public class LogInActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_log_in);
         Intent intent = getIntent();
         long prevTime = intent.getLongExtra("time", 0);
         long currentTime = System.nanoTime();
-
         Log.i("", "onCreate: " + (currentTime - prevTime));
 
         logInUser = findViewById(R.id.logInUser);
@@ -85,7 +85,7 @@ public class LogInActivity extends AppCompatActivity {
                         public void onSuccess(AuthResult authResult) {
                             if (auth.getCurrentUser().isEmailVerified()) {
                                 clearError();
-                                Intent intent = new Intent(LogInActivity.this,MainDashBoardActivity.class);
+                                Intent intent = new Intent(LogInActivity.this, MainDashBoardActivity.class);
                                 finishAffinity();
                                 startActivity(intent);
                             } else {

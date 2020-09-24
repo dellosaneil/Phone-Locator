@@ -1,8 +1,10 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -18,7 +20,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -36,11 +37,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
-import static com.lazybattley.phonetracker.GlobalVariables.REGISTERED_DEVICES;
-import static com.lazybattley.phonetracker.GlobalVariables.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+
 
 public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick {
 
+
+    private static final String TAG = "MapCurrentLocationActiv";
     private GoogleMap mMap;
     private DatabaseReference reference;
     public static final String AVAILABLE_LOCATION = "available_location";
@@ -103,7 +107,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             }
         });
     }
-
 
     private void initializeRecyclerView() {
         new Thread(() -> {
@@ -231,9 +234,49 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         exit = true;
         finish();
-        super.onBackPressed();
-
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "onDestroy: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume: ");
+    }
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

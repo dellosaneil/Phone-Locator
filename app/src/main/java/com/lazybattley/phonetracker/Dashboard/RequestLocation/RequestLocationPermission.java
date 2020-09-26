@@ -21,6 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.DialogClasses.SentRequestsDialog;
 import com.lazybattley.phonetracker.HelperClasses.PendingRequestHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.SentRequestHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.RequestLocationAdapter;
 
@@ -32,6 +33,7 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.NOTIF
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.PENDING_REQUESTS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.SENT_REQUESTS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
 
 public class RequestLocationPermission extends AppCompatActivity implements RequestLocationAdapter.RequestClicked {
@@ -75,22 +77,28 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         currentTime = System.currentTimeMillis();
         //converting email into String that can be used as Reference
         if (!encodedFriendEmail.equals(ENCODED_EMAIL)) {
-            Query query = reference.child(encodedFriendEmail);
+            Query query = reference.child(encodedFriendEmail).child(USER_DETAIL);
             query.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     //checks whether user is in database
                     isUser = snapshot.exists();
                     if (isUser) {
-                        sendRequest(reference);
-                        requestLocation_friendEmail.setError(null);
-                        requestLocation_friendEmail.setErrorEnabled(false);
-                        if (toast != null) {
-                            toast.cancel();
+                        SignUpHelperClass checkMainPhone = snapshot.getValue(SignUpHelperClass.class);
+                        if(!checkMainPhone.getMainPhone().equals("No Phone")){
+                            sendRequest(reference);
+                            requestLocation_friendEmail.setError(null);
+                            requestLocation_friendEmail.setErrorEnabled(false);
+                            if (toast != null) {
+                                toast.cancel();
+                            }
+                            toast = Toast.makeText(RequestLocationPermission.this, "Request Sent", Toast.LENGTH_SHORT);
+                            toast.show();
+                            requestLocation_friendEmail.getEditText().setText("");
+                        }else{
+                            requestLocation_friendEmail.setError("Main Phone not set.");
                         }
-                        toast = Toast.makeText(RequestLocationPermission.this, "Request Sent", Toast.LENGTH_SHORT);
-                        toast.show();
-                        requestLocation_friendEmail.getEditText().setText("");
+
                     } else {
                         requestLocation_friendEmail.setError("User does not exist.");
                     }
@@ -104,9 +112,8 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
             Toast.makeText(this, "Cannot request for own account", Toast.LENGTH_SHORT).show();
             requestLocation_friendEmail.getEditText().setText("");
         }
-
-
     }
+
 
     private void checkStatus(DatabaseReference reference) {
         if (checkInput(decodedFriendEmail)) {

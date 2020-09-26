@@ -1,6 +1,7 @@
 package com.lazybattley.phonetracker.RecyclerViewAdapters;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.view.LayoutInflater;
@@ -47,7 +48,13 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         String[] currentTime = milliSecondsToDate(detail.getLastUpdated());
         String address = getGeoCode(detail.getCoordinates());
         String fullName = detail.getFullName();
+        boolean traceable = detail.isTraceable();
 
+        if(traceable){
+            holder.currentLocation_fullName.setTextColor(Color.GREEN);
+        }else{
+            holder.currentLocation_fullName.setTextColor(Color.RED);
+        }
 
        holder.currentLocation_exactTime.setText(context.getString(R.string.current_location_summary_time, currentTime[0], currentTime[1]));
        holder.currentLocation_location.setText(address);

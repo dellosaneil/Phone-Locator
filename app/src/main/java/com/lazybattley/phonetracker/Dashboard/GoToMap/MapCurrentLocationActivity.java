@@ -1,11 +1,9 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
-import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
-import android.util.Log;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -26,41 +24,43 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.lazybattley.phonetracker.HelperClasses.AvailableLocationHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.CurrentLocationHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.MainPhoneEmailHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.CurrentLocationAdapter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVATED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
 
-public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick {
+public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick, MapViewCurrentLocationInterface {
 
 
-    private static final String TAG = "MapCurrentLocationActiv";
+    private static final String TAG = "TAG";
     private GoogleMap mMap;
-    private DatabaseReference reference;
     public static final String AVAILABLE_LOCATION = "available_location";
     private List<CurrentLocationHelperClass> locationDetails;
-    private List<MainPhoneEmailHelperClass> mainPhoneEmail;
     private CurrentLocationAdapter adapter;
-    private boolean mapReady = false;
     private boolean dataReady = false;
-    private boolean exit = false;
-    private boolean track = false;
     private int indexNumber;
     private MarkerOptions marker;
-    private volatile int zoomLevel;
+    private int zoomLevel;
     public static final String ZOOM_LEVEL = "zoom";
     private SharedPreferences.Editor editor;
-
+    private boolean tracking;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,18 +70,23 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        editor = sharedPreferences.edit();
-        zoomLevel = sharedPreferences.getInt(ZOOM_LEVEL, 16);
-        reference = FirebaseDatabase.getInstance().getReference(USERS);
-        RecyclerView currentLocation_summary = findViewById(R.id.currentLocation_summary);
-        adapter = new CurrentLocationAdapter(this);
-        currentLocation_summary.setAdapter(adapter);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        currentLocation_summary.setLayoutManager(linearLayoutManager);
-        initializeRecyclerView();
+        recyclerViewInit();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        zoomLevel = preferences.getInt(ZOOM_LEVEL, 16);
+        editor = preferences.edit();
         initializeSeekBar();
     }
+
+    private void recyclerViewInit() {
+        RecyclerView currentLocation_summary = findViewById(R.id.currentLocation_summary);
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        MapCurrentLocationRecyclerView recyclerView = new MapCurrentLocationRecyclerView(this, this, executorService);
+        recyclerView.executeThread();
+        adapter = new CurrentLocationAdapter(this);
+        currentLocation_summary.setAdapter(adapter);
+        currentLocation_summary.setLayoutManager(new LinearLayoutManager(this));
+    }
+
 
     private void initializeSeekBar() {
         SeekBar currentLocation_zoom = findViewById(R.id.currentLocation_zoom);
@@ -93,7 +98,10 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 zoomLevel = i + 1;
                 editor.putInt(ZOOM_LEVEL, zoomLevel);
                 editor.apply();
-                updateMapFocus();
+                if(locationDetails.size() != 0){
+                    updateMapFocus();
+                }
+
             }
 
             @Override
@@ -108,79 +116,13 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         });
     }
 
-    private void initializeRecyclerView() {
-        new Thread(() -> {
-            setMainPhoneEmail(reference);
-        }).start();
-    }
-
-    private void setMainPhoneEmail(DatabaseReference reference) {
-        mainPhoneEmail = new ArrayList<>();
-        Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    for (DataSnapshot phoneEmail : snapshot.getChildren()) {
-                        AvailableLocationHelperClass availableLocations = phoneEmail.getValue(AvailableLocationHelperClass.class);
-                        mainPhoneEmail.add(new MainPhoneEmailHelperClass(availableLocations.getEmail(), availableLocations.getMainPhone()));
-                    }
-                    setCoordinates(reference);
-                } else {
-                    Toast.makeText(MapCurrentLocationActivity.this, "No available users.", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
-
-    private void setCoordinates(DatabaseReference reference) {
-        locationDetails = new ArrayList<>();
-        Query query;
-        for (MainPhoneEmailHelperClass essentials : mainPhoneEmail) {
-            if (!essentials.getMainPhone().equals("No Phone")) {
-                query = reference.child(essentials.getEmail()).child(REGISTERED_DEVICES).child(essentials.getMainPhone());
-                Query finalQuery = query;
-                query.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        if (snapshot.exists()) {
-                            if (exit) {
-                                finalQuery.removeEventListener(this);
-                            }
-                            PhoneTrackHelperClass currentLocations = snapshot.getValue(PhoneTrackHelperClass.class);
-                            int index = checkIndexNumber(currentLocations.getEmail());
-                            if (locationDetails.size() > index) {
-                                locationDetails.remove(index);
-                            }
-                            locationDetails.add(index, new CurrentLocationHelperClass(currentLocations.getEmail(),
-                                    new LatLng(currentLocations.getLatitude(), currentLocations.getLongitude()),
-                                    currentLocations.getUpdatedAt()));
-                            if (locationDetails.size() == mainPhoneEmail.size()) {
-                                adapter.setData(locationDetails);
-                                dataReady = true;
-                            }
-                            if (mapReady && track && (index == indexNumber)) {
-                                if (marker != null) {
-                                    mMap.clear();
-                                }
-                                updateMapFocus();
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(MapCurrentLocationActivity.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
-            } else {
-                Toast.makeText(this, "No Main Phone Found", Toast.LENGTH_SHORT).show();
-            }
+    @Override
+    public void setRecyclerView(List<CurrentLocationHelperClass> currentLocationList) {
+        locationDetails = currentLocationList;
+        adapter.setData(currentLocationList);
+        dataReady = true;
+        if (tracking) {
+            updateMapFocus();
         }
     }
 
@@ -190,13 +132,43 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         if (dataReady) {
             mMap.clear();
             indexNumber = position;
-            track = true;
             updateMapFocus();
+            tracking = true;
+            activateTracking(position);
         } else {
             Toast.makeText(this, R.string.current_location_summary_loading, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void activateTracking(int position){
+        String email = locationDetails.get(position).getFullName();
+        DatabaseReference reference = FirebaseDatabase.getInstance()
+                .getReference(USERS).child(email).child(USER_DETAIL);
+        reference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                SignUpHelperClass userDetail = snapshot.getValue(SignUpHelperClass.class);
+                boolean isTraceable = userDetail.isTraceable();
+                if(isTraceable){
+                    Map<String,Object> tempMap = new HashMap<>();
+                    tempMap.put(ACTIVATED, true);
+                    reference.updateChildren(tempMap);
+                    Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " is now activated.", Toast.LENGTH_SHORT).show();
+                }else{
+                    Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " did not turn on application.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+
 
     }
+
 
     private void updateMapFocus() {
         LatLng loc = locationDetails.get((indexNumber)).getCoordinates();
@@ -204,16 +176,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         mMap.addMarker(marker);
         mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoomLevel));
-    }
-
-
-    private int checkIndexNumber(String coordinateEmail) {
-        for (int i = 0; i < mainPhoneEmail.size(); i++) {
-            if (coordinateEmail.equals(mainPhoneEmail.get(i).getEmail())) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     /**
@@ -229,35 +191,142 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
-        mapReady = true;
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        exit = true;
         finish();
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Log.i(TAG, "onDestroy: ");
+
+    //    ******************************************************* ******************************************************* *******************************************************
+    private static class MapCurrentLocationRecyclerView implements Runnable {
+        private Context context;
+        private DatabaseReference reference;
+        private List<String> availableLocationEmailList;
+        private List<MainPhoneEmailHelperClass> mainPhoneEmailList;
+        private List<CurrentLocationHelperClass> currentLocationList;
+        private MapViewCurrentLocationInterface mapViewInterface;
+        private Executor executor;
+
+        public MapCurrentLocationRecyclerView(Context context, MapViewCurrentLocationInterface mapViewInterface, Executor executor) {
+            this.executor = executor;
+            this.context = context;
+            this.reference = FirebaseDatabase.getInstance().getReference(USERS);
+            this.mapViewInterface = mapViewInterface;
+        }
+
+        private void beginThread(DatabaseReference reference) {
+            Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
+            query.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        availableLocationEmailList = new ArrayList<>();
+                        for (DataSnapshot emailList : snapshot.getChildren()) {
+                            availableLocationEmailList.add(emailList.getKey());
+                        }
+                        setPhoneEmailList(reference, availableLocationEmailList);
+                    } else {
+                        Toast.makeText(context, "No users available.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
+
+        private void setPhoneEmailList(DatabaseReference reference, List<String> emailList) {
+            final int[] count = {0};
+            mainPhoneEmailList = new ArrayList<>();
+            Query query;
+            for (String email : emailList) {
+                query = reference.child(email).child(USER_DETAIL);
+                query.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        SignUpHelperClass friendDetail = snapshot.getValue(SignUpHelperClass.class);
+                        String fullName = friendDetail.getFullName();
+                        String friendEmail = friendDetail.getEmail().replace('.', ',');
+                        String mainPhone = friendDetail.getMainPhone();
+                        boolean canTrack = friendDetail.isTraceable();
+                        mainPhoneEmailList.add(new MainPhoneEmailHelperClass(fullName, friendEmail, mainPhone, canTrack));
+                        count[0]++;
+                        if (count[0] == emailList.size()) {
+                            recyclerViewData(reference, mainPhoneEmailList);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+            }
+        }
+
+        private void recyclerViewData(DatabaseReference reference, List<MainPhoneEmailHelperClass> mainPhoneEmailList) {
+            currentLocationList = new ArrayList<>();
+            Query query;
+            for (MainPhoneEmailHelperClass phoneAndEmail : mainPhoneEmailList) {
+                query = reference.child(phoneAndEmail.getEmail())
+                        .child(REGISTERED_DEVICES)
+                        .child(phoneAndEmail.getMainPhone());
+                query.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
+                        String fullName = userLocationDetails.getEmail();
+                        LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
+                        long updatedAt = userLocationDetails.getUpdatedAt();
+                        boolean traceable = userLocationDetails.isAvailable();
+                        if (currentLocationList.size() == mainPhoneEmailList.size()) {
+                            int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
+                            currentLocationList.remove(replaceIndex);
+                            currentLocationList.add(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                        } else {
+                            currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                        }
+                        mapViewInterface.setRecyclerView(currentLocationList);
+
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+
+                    }
+                });
+            }
+        }
+
+        private int checkIndexNumber(String email) {
+            for (int i = 0; i < mainPhoneEmailList.size(); i++) {
+                if (email.equals(mainPhoneEmailList.get(i).getEmail())) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+
+        @Override
+        public void run() {
+            beginThread(reference);
+        }
+
+        public void executeThread() {
+            executor.execute(this);
+        }
     }
+}
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.i(TAG, "onPause: ");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.i(TAG, "onResume: ");
-    }
-
-
+interface MapViewCurrentLocationInterface {
+    void setRecyclerView(List<CurrentLocationHelperClass> currentLocationList);
 }
 
 

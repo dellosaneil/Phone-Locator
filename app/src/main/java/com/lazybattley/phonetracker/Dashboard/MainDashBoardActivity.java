@@ -35,8 +35,6 @@ public class MainDashBoardActivity extends AppCompatActivity {
     public static final String USER_DETAIL = "user_detail";
     public static final String REGISTERED_DEVICES = "registered_devices";
 
-    public static final String ACTIVE = "active";
-
     public static final int LOCATION_REQUEST_CODE = 1;
     public static final int LOCATION_REQUEST_FOREGROUND_CODE = 9;
 
@@ -45,6 +43,11 @@ public class MainDashBoardActivity extends AppCompatActivity {
     public static final String NOTIFICATIONS = "notifications";
     public static final String TIME_SENT = "timeSent";
     public static final String STATUS = "status";
+    public static final String AVAILABLE = "available";
+    public static final String ACTIVE = "active";
+    public static final String TRACEABLE = "traceable";
+    public static final String ACTIVATED = "activated";
+
 
     public static String ENCODED_EMAIL;
     private CardView mainDashboard_bellCardView;

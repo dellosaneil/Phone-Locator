@@ -156,13 +156,10 @@ public class SignUpActivityOne extends AppCompatActivity {
 
     //Adds new user in the database
     private void addNewUser(String email, String childReference, String fullName) {
-        reference.child(childReference).child(USER_DETAIL).setValue(new SignUpHelperClass(childReference, email, fullName, "No Phone"));
+        reference.child(childReference).child(USER_DETAIL).setValue(new SignUpHelperClass(email, fullName, "No Phone", false, false));
     }
-
 
     private String encodeEmail(String email) {
         return email.replace(".", ",");
     }
-
-
 }

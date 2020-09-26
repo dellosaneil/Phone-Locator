@@ -8,8 +8,11 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,10 +32,13 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity;
 import com.lazybattley.phonetracker.DialogClasses.RegisterPhoneDialog;
 import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
+import com.lazybattley.phonetracker.OptionsScreen;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.RegisteredPhoneAdapter;
 
@@ -43,8 +49,10 @@ import java.util.Map;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.AVAILABLE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.IS_REGISTERED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.TRACEABLE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
@@ -53,7 +61,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
 
     public static final String MAIN_PHONE = "mainPhone";
     private MaterialButton registerPhone_registerOrUnregisterButton;
-    private DatabaseReference isActive;
     private boolean state;
     private TextView registerPhone_isRegistered;
     private RecyclerView registerPhone_phonesRegistered;
@@ -68,6 +75,8 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     public static final String BUILD_ID = "buildId";
     public static final String DEVICE_NAME = "deviceName";
     public static final String EMAIL = "email";
+    private static final String TAG = "RegisterPhoneDashboardA";
+    private boolean isMainDevice;
 
 
     @SuppressLint("HardwareIds")
@@ -76,6 +85,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_phone_dashboard);
         buildId = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        mainDeviceCheck();
         isRegistered();
         requestPermission();
         registerPhone_progressBar = findViewById(R.id.registerPhone_progressBar);
@@ -85,10 +95,10 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         coordinates = new ArrayList<>();
         batteryLevel = new ArrayList<>();
         deviceName = new ArrayList<>();
-        isActive = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);    //checks whether the user is tracking the device
+        getCurrentStatus();             //checks if the phone is available
         cardViewRegistration();         //checks whether the device is registered.
         initRecyclerView();             //initialize the recyclerview
-        getCurrentStatus();             //checks if the phone is actively tracked.
+
     }
 
     private void cardViewRegistration() {
@@ -107,23 +117,19 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         }
     }
 
-    private void isRegistered() {
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        isRegistered = preferences.getBoolean(PHONE_REGISTRATION, false);
-    }
-
-    private void registerMainPhone() {
-        DatabaseReference query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
-        query.addValueEventListener(new ValueEventListener() {
+    private void mainDeviceCheck() {
+        Query mainDeviceID = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
+        mainDeviceID.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
-                if (userDetails.getMainPhone().equals("No Phone")) {
-                    Toast.makeText(RegisterPhoneDashboardActivity.this, "This phone is the 'Main Phone'.", Toast.LENGTH_SHORT).show();
+                if (snapshot.exists()) {
+                    SignUpHelperClass user_details = snapshot.getValue(SignUpHelperClass.class);
+                    if (buildId.equals(user_details.getMainPhone())) {
+                        isMainDevice = true;
+                    }
+                } else {
+                    Toast.makeText(RegisterPhoneDashboardActivity.this, TAG, Toast.LENGTH_SHORT).show();
                 }
-                Map<String, Object> updateMainPhone = new HashMap<>();
-                updateMainPhone.put(MAIN_PHONE, buildId);
-                query.updateChildren(updateMainPhone);
             }
 
             @Override
@@ -133,16 +139,50 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         });
     }
 
+
+    private void isRegistered() {
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        isRegistered = preferences.getBoolean(PHONE_REGISTRATION, false);
+    }
+
+    private void registerMainPhone() {
+        DatabaseReference query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
+                if (userDetails.getMainPhone().equals("No Phone")) {
+                    Toast.makeText(RegisterPhoneDashboardActivity.this, "This phone is the 'Main Phone'.", Toast.LENGTH_SHORT).show();
+                    Map<String, Object> updateMainPhone = new HashMap<>();
+                    updateMainPhone.put(MAIN_PHONE, buildId);
+                    query.updateChildren(updateMainPhone);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+
     private void getCurrentStatus() {
         if (isRegistered) {
-            isActive.addListenerForSingleValueEvent(new ValueEventListener() {
+            Query availability = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
+            availability.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
-                        PhoneTrackHelperClass curLocation = snapshot.getValue(PhoneTrackHelperClass.class);
-                        state = curLocation.isActive();
+                        PhoneTrackHelperClass currentState = snapshot.getValue(PhoneTrackHelperClass.class);
+                        state = currentState.isAvailable();
+                        if (state) {
+                            startLocationTrackingService();
+                            registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
+                        } else {
+                            registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
+                        }
                     }
-                    startLocationTrackingService();
                 }
 
                 @Override
@@ -154,6 +194,8 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
 
 
     private void startLocationTrackingService() {
+        DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
+        Map<String, Object> deviceStatusUpdate = new HashMap<>();
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
         serviceIntent.putExtra(IS_REGISTERED, state);
         serviceIntent.putExtra(BUILD_ID, buildId);
@@ -161,24 +203,35 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             //Phone is currently not tracked
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 this.startForegroundService(serviceIntent);
-            }else{
+            } else {
                 startService(serviceIntent);
             }
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
-            DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
-            Map<String, Object> deviceStatusUpdate = new HashMap<>();
-            deviceStatusUpdate.put(ACTIVE, false);
-            update.updateChildren(deviceStatusUpdate);
+            deviceStatusUpdate.put(AVAILABLE, false);
+
         } else {
             //Phone is currently tracked
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 this.startForegroundService(serviceIntent);
-            }else{
+            } else {
                 startService(serviceIntent);
             }
+            deviceStatusUpdate.put(AVAILABLE, true);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
         }
+        if (isMainDevice) {
+            traceableHandler(state);
+        }
+        update.updateChildren(deviceStatusUpdate);
     }
+
+    private void traceableHandler(boolean traceability) {
+        DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
+        Map<String, Object> traceable = new HashMap<>();
+        traceable.put(TRACEABLE, traceability);
+        update.updateChildren(traceable);
+    }
+
 
     public void changeState(View view) {
         if (!isRegistered) {
@@ -247,6 +300,8 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         Map<String, Object> initializePhone = new HashMap<>();
         initializePhone.put(EMAIL, ENCODED_EMAIL);
         initializePhone.put(DEVICE_NAME, phone);
+        initializePhone.put(AVAILABLE, false);
+        initializePhone.put(ACTIVE, false);
         ref.updateChildren(initializePhone);
         registerMainPhone();
         SharedPreferences.Editor editor = preferences.edit();
@@ -257,10 +312,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         cardViewRegistration();
     }
 
-    public void backButton(View view){
+    public void backButton(View view) {
         onBackPressed();
     }
-
-
-
 }

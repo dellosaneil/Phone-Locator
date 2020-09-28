@@ -94,22 +94,6 @@ public class NotificationAdapter extends RecyclerView.Adapter<NotificationAdapte
 
     public interface NotificationClick{
         void onClickNotification(int position);
-
-
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

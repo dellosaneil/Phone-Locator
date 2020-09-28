@@ -56,23 +56,15 @@ import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service implements BatteryDrainHandler {
 
-    private volatile static boolean state;
-    private volatile static boolean activated;
-
-
-    public static final String BATTERY_PERCENT = "batteryPercent";
-    public static final String LATITUDE = "latitude";
-    public static final String LONGITUDE = "longitude";
-    public static final String UPDATE_AT = "updatedAt";
+    private boolean state;
+    private boolean activated;
     private static final String TAG = "PhoneLocationService";
-
-    private static PhoneLocationServiceInterface phoneLocationServiceInterface;
-
+    private PhoneLocationTracker locationTracker;
     @Override
     public void onCreate() {
         super.onCreate();
         @SuppressLint("HardwareIds") String buildId = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-        PhoneLocationTracker locationTracker = new PhoneLocationTracker(this, buildId, this);
+        locationTracker = new PhoneLocationTracker(this, buildId, this);
         trackerActivated();
 
     }
@@ -86,7 +78,6 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         state = intent.getBooleanExtra(IS_REGISTERED, false);
-//        buildId = intent.getStringExtra(BUILD_ID);
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, LOCATION_REQUEST_CODE, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -100,17 +91,18 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
         return START_STICKY;
     }
 
-    private void handleEvent() {
+    private void handleEvent(boolean active) {
+        if (active && state) {
+            locationTracker.startUpdate();
+        } else {
+            locationTracker.stopUpdate();
+        }
+
         if (!state) {
             stopForeground(true);
             stopSelf();
         }
     }
-
-    private static void interfaceHandler(PhoneLocationServiceInterface phoneLocationServiceInterface) {
-        PhoneLocationService.phoneLocationServiceInterface = phoneLocationServiceInterface;
-    }
-
 
     private void trackerActivated() {
         Query query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
@@ -120,8 +112,7 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                 if (snapshot.exists()) {
                     SignUpHelperClass getActive = snapshot.getValue(SignUpHelperClass.class);
                     activated = getActive.isActivated();
-                    phoneLocationServiceInterface.serviceInterrupt(state, activated);
-                    handleEvent();
+                    handleEvent(activated);
 
                 } else {
                     Toast.makeText(PhoneLocationService.this, TAG, Toast.LENGTH_SHORT).show();
@@ -144,12 +135,17 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
         unTraceable.put(TRACEABLE, false);
         unTraceable.put(ACTIVATED, false);
         update.updateChildren(unTraceable);
-        handleEvent();
+        handleEvent(false);
     }
 
-//************************************************************************************************************************************************************
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
 
-    public static class PhoneLocationTracker implements PhoneLocationServiceInterface {
+    //************************************************************************************************************************************************************
+
+    public static class PhoneLocationTracker {
         private FusedLocationProviderClient fusedLocationProviderClient;
         private LocationRequest locationRequest;
         private Context context;
@@ -161,8 +157,13 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
         private Map<String, Object> updateDevice;
         private BatteryDrainHandler listener;
 
+        public final String BATTERY_PERCENT = "batteryPercent";
+        public final String LATITUDE = "latitude";
+        public final String LONGITUDE = "longitude";
+        public final String UPDATE_AT = "updatedAt";
+
+
         public PhoneLocationTracker(Context context, String buildId, BatteryDrainHandler listener) {
-            interfaceHandler(this);
             this.listener = listener;
             this.context = context;
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
@@ -181,7 +182,6 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
-                    Log.i(TAG, "onLocationResult: " + Thread.currentThread().getName());
                     batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
                     if (batteryLevel < 30) {
                         drainedBattery();
@@ -203,12 +203,12 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                     ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
-            if (state && activated) {
-                fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
-            }
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+
         }
 
         private void stopUpdate() {
+            Log.i(TAG, "stopUpdate: ");
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
 
@@ -218,22 +218,9 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
             reference.updateChildren(updateDevice);
             listener.batteryDrained(false);
         }
-
-        @Override
-        public void serviceInterrupt(boolean state, boolean activated) {
-            if (!state || !activated) {
-                stopUpdate();
-            } else {
-                startUpdate();
-            }
-        }
     }
 }
 
 interface BatteryDrainHandler {
     void batteryDrained(boolean off);
-}
-
-interface PhoneLocationServiceInterface {
-    void serviceInterrupt(boolean state, boolean activated);
 }

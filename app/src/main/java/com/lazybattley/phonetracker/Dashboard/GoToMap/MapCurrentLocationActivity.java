@@ -1,9 +1,11 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -31,6 +33,7 @@ import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.CurrentLocationAdapter;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +41,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVATED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
@@ -49,18 +53,19 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_
 public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick, MapViewCurrentLocationInterface {
 
 
-    private static final String TAG = "TAG";
+    private static final String TAG = "MapCurrentLocationActiv";
     private GoogleMap mMap;
-    public static final String AVAILABLE_LOCATION = "available_location";
     private List<CurrentLocationHelperClass> locationDetails;
     private CurrentLocationAdapter adapter;
     private boolean dataReady = false;
     private int indexNumber;
     private MarkerOptions marker;
     private int zoomLevel;
-    public static final String ZOOM_LEVEL = "zoom";
+    private final String ZOOM_LEVEL = "zoom";
     private SharedPreferences.Editor editor;
     private boolean tracking;
+    private ExecutorService executorService;
+    private MapCurrentLocationRecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +75,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        locationDetails = new ArrayList<>();
         recyclerViewInit();
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         zoomLevel = preferences.getInt(ZOOM_LEVEL, 16);
@@ -79,12 +85,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
     private void recyclerViewInit() {
         RecyclerView currentLocation_summary = findViewById(R.id.currentLocation_summary);
-        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        MapCurrentLocationRecyclerView recyclerView = new MapCurrentLocationRecyclerView(this, this, executorService);
-        recyclerView.executeThread();
         adapter = new CurrentLocationAdapter(this);
         currentLocation_summary.setAdapter(adapter);
         currentLocation_summary.setLayoutManager(new LinearLayoutManager(this));
+        executorService = Executors.newFixedThreadPool(1);
+        recyclerView = new MapCurrentLocationRecyclerView(this);
+        executorService.submit(recyclerView);
     }
 
 
@@ -98,10 +104,9 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 zoomLevel = i + 1;
                 editor.putInt(ZOOM_LEVEL, zoomLevel);
                 editor.apply();
-                if(locationDetails.size() != 0){
+                if (locationDetails.size() != 0) {
                     updateMapFocus();
                 }
-
             }
 
             @Override
@@ -117,15 +122,15 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     }
 
     @Override
-    public void setRecyclerView(List<CurrentLocationHelperClass> currentLocationList) {
-        locationDetails = currentLocationList;
-        adapter.setData(currentLocationList);
+    public void setRecyclerView(List<CurrentLocationHelperClass> newCurrentLocation) {
+        locationDetails.clear();
+        locationDetails.addAll(newCurrentLocation);
+        adapter.updateRecyclerView(locationDetails);
         dataReady = true;
         if (tracking) {
             updateMapFocus();
         }
     }
-
 
     @Override
     public void onPersonClick(int position) {
@@ -140,7 +145,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         }
     }
 
-    private void activateTracking(int position){
+    private void activateTracking(int position) {
         String email = locationDetails.get(position).getFullName();
         DatabaseReference reference = FirebaseDatabase.getInstance()
                 .getReference(USERS).child(email).child(USER_DETAIL);
@@ -149,12 +154,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 SignUpHelperClass userDetail = snapshot.getValue(SignUpHelperClass.class);
                 boolean isTraceable = userDetail.isTraceable();
-                if(isTraceable){
-                    Map<String,Object> tempMap = new HashMap<>();
+                if (isTraceable) {
+                    Map<String, Object> tempMap = new HashMap<>();
                     tempMap.put(ACTIVATED, true);
                     reference.updateChildren(tempMap);
                     Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " is now activated.", Toast.LENGTH_SHORT).show();
-                }else{
+                } else {
                     Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " did not turn on application.", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -164,9 +169,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
             }
         });
-
-
-
     }
 
 
@@ -202,20 +204,20 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
     //    ******************************************************* ******************************************************* *******************************************************
     private static class MapCurrentLocationRecyclerView implements Runnable {
-        private Context context;
         private DatabaseReference reference;
         private List<String> availableLocationEmailList;
         private List<MainPhoneEmailHelperClass> mainPhoneEmailList;
         private List<CurrentLocationHelperClass> currentLocationList;
         private MapViewCurrentLocationInterface mapViewInterface;
-        private Executor executor;
+        private final String AVAILABLE_LOCATION = "available_location";
 
-        public MapCurrentLocationRecyclerView(Context context, MapViewCurrentLocationInterface mapViewInterface, Executor executor) {
-            this.executor = executor;
-            this.context = context;
+
+        public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface) {
             this.reference = FirebaseDatabase.getInstance().getReference(USERS);
             this.mapViewInterface = mapViewInterface;
         }
+
+
 
         private void beginThread(DatabaseReference reference) {
             Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
@@ -228,8 +230,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                             availableLocationEmailList.add(emailList.getKey());
                         }
                         setPhoneEmailList(reference, availableLocationEmailList);
-                    } else {
-                        Toast.makeText(context, "No users available.", Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -259,6 +259,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                         if (count[0] == emailList.size()) {
                             recyclerViewData(reference, mainPhoneEmailList);
                         }
+
                     }
 
                     @Override
@@ -271,12 +272,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
         private void recyclerViewData(DatabaseReference reference, List<MainPhoneEmailHelperClass> mainPhoneEmailList) {
             currentLocationList = new ArrayList<>();
-            Query query;
-            for (MainPhoneEmailHelperClass phoneAndEmail : mainPhoneEmailList) {
-                query = reference.child(phoneAndEmail.getEmail())
+            Query[] queries = new Query[mainPhoneEmailList.size()];
+            for (int i = 0; i < mainPhoneEmailList.size(); i++) {
+                queries[i] = reference.child(mainPhoneEmailList.get(i).getEmail())
                         .child(REGISTERED_DEVICES)
-                        .child(phoneAndEmail.getMainPhone());
-                query.addValueEventListener(new ValueEventListener() {
+                        .child(mainPhoneEmailList.get(i).getMainPhone());
+                queries[i].addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
@@ -286,14 +287,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                         boolean traceable = userLocationDetails.isAvailable();
                         if (currentLocationList.size() == mainPhoneEmailList.size()) {
                             int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
-                            currentLocationList.remove(replaceIndex);
-                            currentLocationList.add(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                            currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
                         } else {
                             currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
                         }
                         mapViewInterface.setRecyclerView(currentLocationList);
-
-
                     }
 
                     @Override
@@ -317,10 +315,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         @Override
         public void run() {
             beginThread(reference);
-        }
-
-        public void executeThread() {
-            executor.execute(this);
         }
     }
 }

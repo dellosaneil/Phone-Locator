@@ -36,6 +36,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -100,9 +101,10 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
 
         if (!state) {
             stopForeground(true);
-            stopSelf();
+//            stopSelf();
         }
     }
+
 
     private void trackerActivated() {
         Query query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
@@ -208,7 +210,6 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
         }
 
         private void stopUpdate() {
-            Log.i(TAG, "stopUpdate: ");
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
 

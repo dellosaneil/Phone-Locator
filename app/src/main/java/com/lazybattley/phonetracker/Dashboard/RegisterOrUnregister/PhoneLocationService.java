@@ -61,6 +61,7 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
     private boolean activated;
     private static final String TAG = "PhoneLocationService";
     private PhoneLocationTracker locationTracker;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -188,6 +189,7 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                     if (batteryLevel < 30) {
                         drainedBattery();
                     } else {
+                        Log.i(TAG, "onLocationResult: " + Thread.currentThread().getName());
                         updateDevice = new HashMap<>();
                         updatedAt = System.currentTimeMillis();
                         updateDevice.put(BATTERY_PERCENT, batteryLevel);
@@ -198,6 +200,7 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                     }
                 }
             };
+
         }
 
         private void startUpdate() {

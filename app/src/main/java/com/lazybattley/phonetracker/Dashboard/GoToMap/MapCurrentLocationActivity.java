@@ -1,25 +1,37 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.os.HandlerCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,7 +50,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -49,7 +60,7 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
 
-public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick, MapViewCurrentLocationInterface {
+public class MapCurrentLocationActivity extends FragmentActivity implements OnMapReadyCallback, CurrentLocationAdapter.OnPersonClick, MapViewCurrentLocationInterface, PhoneCurrentLocationInterface{
 
 
     private static final String TAG = "MapCurrentLocationActiv";
@@ -57,8 +68,8 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     private List<CurrentLocationHelperClass> locationDetails;
     private CurrentLocationAdapter adapter;
     private boolean dataReady = false;
-    private int indexNumber;
-    private MarkerOptions marker;
+    private int indexNumber = -1;
+    private MarkerOptions[] markers;
     private int zoomLevel;
     private final String ZOOM_LEVEL = "zoom";
     private SharedPreferences.Editor editor;
@@ -66,6 +77,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     private MapCurrentLocationRecyclerView recyclerView;
     private Toast toast;
     private Handler handler;
+    private boolean activatedAUser;
+    private ProgressBar currentLocation_progressBar;
+    private int prevActivated = -1;
+    private CurrentPhoneLocationMap currentPhoneLocationMap;
+    private boolean multipleMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +91,9 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        currentPhoneLocationMap = new CurrentPhoneLocationMap(this,this);
+        markers = new MarkerOptions[2];
+        currentLocation_progressBar = findViewById(R.id.currentLocation_progressBar);
         Log.i(TAG, "onCreate: ");
         handler = HandlerCompat.createAsync(Looper.getMainLooper());
         locationDetails = new ArrayList<>();
@@ -86,23 +105,47 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     }
 
 
+    @Override
+    public void ownerCurrentLocation(LatLng location) {
+        markers[1] = new MarkerOptions().position(location).title("Current Location");
+        multipleMarkerManager();
+    }
+
+    public void multipleMarker(View view){
+        currentPhoneLocationMap.startUpdate();
+        multipleMarker = true;
+
+    }
+
+
+    private void multipleMarkerManager(){
+        mMap.clear();
+        mMap.addMarker(markers[0]);
+        mMap.addMarker(markers[1]);
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(markers[0].getPosition());
+        builder.include(markers[1].getPosition());
+        LatLngBounds bounds = builder.build();
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100), 2000, null);
+    }
+
+
+
     private void recyclerViewInit() {
-        Log.i(TAG, "recyclerViewInit: ");
+//        Log.i(TAG, "recyclerViewInit: ");
         RecyclerView currentLocation_summary = findViewById(R.id.currentLocation_summary);
         adapter = new CurrentLocationAdapter(this);
         currentLocation_summary.setAdapter(adapter);
         currentLocation_summary.setLayoutManager(new LinearLayoutManager(this));
         ExecutorService executorService = Executors.newFixedThreadPool(1);
-        recyclerView = new MapCurrentLocationRecyclerView(this, handler, executorService);
-        recyclerView.executeThread();
-//        new Thread(recyclerView).start();
-//        executorService.execute(recyclerView);
+        recyclerView = new MapCurrentLocationRecyclerView(this, handler);
+        executorService.execute(recyclerView);
 
     }
 
 
     private void initializeSeekBar() {
-        Log.i(TAG, "initializeSeekBar: ");
+//        Log.i(TAG, "initializeSeekBar: ");
         SeekBar currentLocation_zoom = findViewById(R.id.currentLocation_zoom);
         currentLocation_zoom.setProgress(zoomLevel);
         currentLocation_zoom.setMax(19);
@@ -112,7 +155,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 zoomLevel = i + 1;
                 editor.putInt(ZOOM_LEVEL, zoomLevel);
                 editor.apply();
-                if (locationDetails.size() != 0) {
+                if (indexNumber != -1) {
                     updateMapFocus();
                 }
             }
@@ -131,7 +174,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
     @Override
     public void setRecyclerView(List<CurrentLocationHelperClass> newCurrentLocation) {
-        Log.i(TAG, "setRecyclerView: ");
+        currentLocation_progressBar.setVisibility(View.INVISIBLE);
         locationDetails.clear();
         locationDetails.addAll(newCurrentLocation);
         adapter.updateRecyclerView(locationDetails);
@@ -143,7 +186,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
     @Override
     public void onPersonClick(int position) {
-        Log.i(TAG, "onPersonClick: ");
+//        Log.i(TAG, "onPersonClick: ");
         if (dataReady) {
             mMap.clear();
             indexNumber = position;
@@ -156,7 +199,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     }
 
     private void activateTracking() {
-        Log.i(TAG, "activateTracking: ");
+//        Log.i(TAG, "activateTracking: ");
+        if (prevActivated != -1) {
+            deactivateTracker(prevActivated);
+        }
+        prevActivated = indexNumber;
+        activatedAUser = true;
         String email = locationDetails.get(indexNumber).getFullName();
         DatabaseReference reference = FirebaseDatabase.getInstance()
                 .getReference(USERS).child(email).child(USER_DETAIL);
@@ -197,14 +245,27 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         reference.updateChildren(deactivate);
     }
 
+    private void deactivateTracker(int prevNumber) {
+        Log.i(TAG, "deactivateTracker: ");
+        String email = locationDetails.get(prevNumber).getFullName();
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS)
+                .child(email).child(USER_DETAIL);
+        Map<String, Object> deactivate = new HashMap<>();
+        deactivate.put(ACTIVATED, false);
+        reference.updateChildren(deactivate);
+    }
+
 
     private void updateMapFocus() {
-        Log.i(TAG, "updateMapFocus: ");
+//        Log.i(TAG, "updateMapFocus: ");
+        mMap.clear();
         LatLng loc = locationDetails.get((indexNumber)).getCoordinates();
-        marker = new MarkerOptions().position(loc).title(locationDetails.get(indexNumber).getFullName());
-        mMap.addMarker(marker);
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoomLevel));
+        markers[0] = new MarkerOptions().position(loc).title(locationDetails.get(indexNumber).getFullName());
+        if(!multipleMarker){
+            mMap.addMarker(markers[0]);
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoomLevel));
+        }
     }
 
     /**
@@ -233,16 +294,35 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     @Override
     protected void onPause() {
         super.onPause();
-        deactivateTracker();
-        recyclerView.removeListener();
+        if (activatedAUser) {
+            deactivateTracker();
+            activatedAUser = false;
+        }
+        prevActivated = -1;
         Log.i(TAG, "onPause: ");
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        Log.i(TAG, "onDestroy: ");
+    }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if(!activatedAUser && indexNumber != -1){
+            activateTracking();
+        }
+
         Log.i(TAG, "onResume: ");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.i(TAG, "onStart: ");
     }
 
     //    ******************************************************* ******************************************************* *******************************************************
@@ -255,21 +335,18 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         private ValueEventListener locationCallback;
         private Query[] queries;
         private Handler handler;
-        private Executor executor;
+        private boolean listening;
 
 
-        public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface, Handler handler, Executor executor) {
+        public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface, Handler handler) {
             this.reference = FirebaseDatabase.getInstance().getReference(USERS);
             this.mapViewInterface = mapViewInterface;
             this.handler = handler;
-            this.executor = executor;
-//            test();
         }
 
 
         private void beginThread(DatabaseReference reference) {
             String AVAILABLE_LOCATION = "available_location";
-            Log.i(TAG, "beginThread: " + (Looper.myLooper() == Looper.getMainLooper()));
             Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
             query.addValueEventListener(new ValueEventListener() {
                 @Override
@@ -292,7 +369,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
         private void setPhoneEmailList(DatabaseReference reference, List<String> emailList) {
             final int[] count = {0};
-            Log.i(TAG, "setPhoneEmailList: " + (Looper.myLooper() == Looper.getMainLooper()));
             mainPhoneEmailList = new ArrayList<>();
             Query query;
             for (String email : emailList) {
@@ -300,7 +376,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 query.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        Log.i(TAG, "onDataChange: " + (Looper.myLooper() == Looper.getMainLooper()));
                         SignUpHelperClass friendDetail = snapshot.getValue(SignUpHelperClass.class);
                         String fullName = friendDetail.getFullName();
                         String friendEmail = friendDetail.getEmail().replace('.', ',');
@@ -332,37 +407,23 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             }
         }
 
-
-        private void removeListener() {
-            for (Query q : queries) {
-                q.removeEventListener(locationCallback);
-            }
-        }
-
         private void initializeCallback() {
-            Log.i(TAG, "Thread: " + (Looper.myLooper() == Looper.getMainLooper()));
             locationCallback = new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    new Thread(() -> {
-                        Log.i(TAG, "Thread: " + (Looper.myLooper() == Looper.getMainLooper()));
-                        PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
-                        String fullName = userLocationDetails.getEmail();
-                        LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
-                        long updatedAt = userLocationDetails.getUpdatedAt();
-                        boolean traceable = userLocationDetails.isAvailable();
-                        if (currentLocationList.size() == mainPhoneEmailList.size()) {
-                            int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
-                            currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
-                        } else {
-                            currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
-                        }
-                        handler.post(() -> {
-                                mapViewInterface.setRecyclerView(currentLocationList);
-                        });
-
-                    }).start();
-
+                    Log.i(TAG, "onDataChange: " + Thread.currentThread().getName());
+                    PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
+                    String fullName = userLocationDetails.getEmail();
+                    LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
+                    long updatedAt = userLocationDetails.getUpdatedAt();
+                    boolean traceable = userLocationDetails.isAvailable();
+                    if (currentLocationList.size() == mainPhoneEmailList.size()) {
+                        int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
+                        currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                    } else {
+                        currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                    }
+                    mapViewInterface.setRecyclerView(currentLocationList);
                 }
 
                 @Override
@@ -385,19 +446,64 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
         @Override
         public void run() {
-            Log.i(TAG, "Thread RUN: " + (Looper.myLooper() == Looper.getMainLooper()));
+            Log.i(TAG, "run: ");
             initializeCallback();
             beginThread(reference);
         }
+    }
 
-        private void executeThread() {
-            executor.execute(this);
+    public static class CurrentPhoneLocationMap {
+        private FusedLocationProviderClient fusedLocationProviderClient;
+        private LocationRequest locationRequest;
+        private Context context;
+        private LocationCallback locationCallback;
+        private PhoneCurrentLocationInterface currentLocation;
+
+        public CurrentPhoneLocationMap(Context context, PhoneCurrentLocationInterface currentLocation) {
+            this.currentLocation = currentLocation;
+            this.context = context;
+            locationRequest = new LocationRequest();
+            locationRequest.setInterval(3000);
+            locationRequest.setFastestInterval(2500);
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+            callback();
+        }
+
+        private void callback() {
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    super.onLocationResult(locationResult);
+                    Log.i(TAG, "onLocationResult: " + Thread.currentThread().getName());
+                    currentLocation.ownerCurrentLocation(new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude()));
+                }
+            };
+        }
+
+        private void startUpdate() {
+            if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null);
+
+        }
+
+        private void stopUpdate() {
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
     }
+
+
 }
 
 interface MapViewCurrentLocationInterface {
     void setRecyclerView(List<CurrentLocationHelperClass> currentLocationList);
+}
+
+interface PhoneCurrentLocationInterface{
+    void ownerCurrentLocation(LatLng location);
 }
 
 

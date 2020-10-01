@@ -2,9 +2,11 @@ package com.lazybattley.phonetracker;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -42,7 +44,7 @@ public class SplashScreen extends AppCompatActivity implements FinishedSplashScr
         executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         handler = HandlerCompat.createAsync(Looper.getMainLooper());
         auth = FirebaseAuth.getInstance();
-
+//
 //        SharedPreferences temp = PreferenceManager.getDefaultSharedPreferences(this);
 //        SharedPreferences.Editor editor = temp.edit();
 //        editor.putBoolean("isRegistered", false);

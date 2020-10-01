@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVATED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.AVAILABLE;
@@ -116,6 +118,16 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             registerPhone_registerOrUnregisterButton.setText(getText(R.string.register_or_unregister_register_device));
         }
     }
+
+    private void updateActiveStatus(){
+        DatabaseReference reference = FirebaseDatabase.getInstance()
+                .getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
+        Map<String, Object> updateActiveStatus = new HashMap<>();
+        updateActiveStatus.put(ACTIVATED, false);
+        reference.updateChildren(updateActiveStatus);
+    }
+
+
 
     private void mainDeviceCheck() {
         Query mainDeviceID = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
@@ -208,6 +220,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             }
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
             deviceStatusUpdate.put(AVAILABLE, false);
+            updateActiveStatus();
 
         } else {
             //Phone is currently tracked

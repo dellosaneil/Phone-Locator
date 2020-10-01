@@ -99,20 +99,20 @@
     <string name="title_activity_map_current_location">Map</string>
 
 
-<!--    Current Location Summary-->
+    <!--    Current Location Summary-->
     <string name="current_location_summary_updated_at">Updated At:</string>
     <string name="current_location_summary_time">%1$s\n%2$s</string>
     <string name="current_location_summary_loading">Loading…</string>
 
 
-
-<!--    Dialog Register Phone-->
+    <!--    Dialog Register Phone-->
     <string name="dialog_register_phone_enter_phone_name">Name this device</string>
     <string name="dialog_register_phone_positive">Register</string>
     <string name="dialog_register_phone_negative">Cancel</string>
     <string name="dialog_register_phone_register_device">Register Device</string>
 
-
-
-
+    <!--    User Profile-->
+    <string name="user_profile_device_name_tag">Main Device Name:</string>
+    <string name="user_profile_click_to_change">Click Here to Change Main Device</string>
+    <string name="user_profile_permitted_people">Permitted People</string>
 </resources>

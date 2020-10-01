@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Pair;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,6 +24,7 @@ import com.lazybattley.phonetracker.Dashboard.GoToMap.MapCurrentLocationActivity
 import com.lazybattley.phonetracker.Dashboard.Notifications.NotificationActivity;
 import com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister.RegisterPhoneDashboardActivity;
 import com.lazybattley.phonetracker.Dashboard.RequestLocation.RequestLocationPermission;
+import com.lazybattley.phonetracker.Dashboard.UserProfile.UserProfileActivity;
 import com.lazybattley.phonetracker.OptionsScreen;
 import com.lazybattley.phonetracker.R;
 
@@ -56,6 +58,7 @@ public class MainDashBoardActivity extends AppCompatActivity {
     private MaterialButton mainDashBoard_requestLocation;
     private MaterialButton mainDashBoard_registerOrUnregister;
     private MaterialButton mainDashBoard_goToMap;
+    private ImageButton mainDashBoard_userProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +70,7 @@ public class MainDashBoardActivity extends AppCompatActivity {
         mainDashboard_bellCardView = findViewById(R.id.mainDashboard_bellCardView);
         mainDashBoard_notificationCounter = findViewById(R.id.mainDashBoard_notificationCounter);
         mainDashBoard_goToMap = findViewById(R.id.mainDashBoard_goToMap);
+        mainDashBoard_userProfile = findViewById(R.id.mainDashBoard_userProfile);
         ENCODED_EMAIL = encodeEmail(Objects.requireNonNull(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getEmail()));
         DatabaseReference rootNode = FirebaseDatabase.getInstance().getReference(USERS);
         rootNode.child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).addValueEventListener(new ValueEventListener() {
@@ -126,6 +130,17 @@ public class MainDashBoardActivity extends AppCompatActivity {
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, pair);
         startActivity(intent, options.toBundle());
     }
+
+    public void viewUserProfile(View view){
+        Intent intent = new Intent(this, UserProfileActivity.class);
+        Pair<View, String> pair = new Pair(mainDashBoard_userProfile, "mainDashboard_toUserProfile");
+        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, pair);
+        startActivity(intent, options.toBundle());
+
+
+
+    }
+
 
     private void registerPhone() {
         Intent intent = new Intent(this, RegisterPhoneDashboardActivity.class);

@@ -115,4 +115,10 @@
     <string name="user_profile_device_name_tag">Main Device Name:</string>
     <string name="user_profile_click_to_change">Click Here to Change Main Device</string>
     <string name="user_profile_permitted_people">Permitted People</string>
+    <string name="user_profile_remove_positive">Remove</string>
+    <string name="user_profile_remove_cancel">Cancel</string>
+    <string name="user_profile_remove_title">Would you like to remove %1$s</string>
+    <string name="user_profile_remove_message">Removing %1$s would mean he/she cannot access your location.</string>
+
+
 </resources>

@@ -66,6 +66,9 @@ public class RequestLocationAdapter extends RecyclerView.Adapter<RequestLocation
                 holder.requestLocation_imageStatus.setImageResource(R.drawable.ic_denied);
                 holder.requestLocation_currentStatus.setTextColor(Color.RED);
                 break;
+            case "Removed":
+                holder.requestLocation_imageStatus.setImageResource(R.drawable.ic_remove);
+                holder.requestLocation_currentStatus.setTextColor(Color.RED);
         }
         holder.requestLocation_currentStatus.setText(status);
 

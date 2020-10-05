@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.lazybattley.phonetracker.HelperClasses.OwnPhoneDetailsHelperClass;
 import com.lazybattley.phonetracker.R;
 
 import java.io.IOException;
@@ -25,19 +26,13 @@ import java.util.Locale;
 public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhoneAdapter.RegisteredPhoneViewHolder> {
 
     private Context context;
-    private List<LatLng> coordinates;
-    private List<Integer> batteryLevel;
-    private List<String> deviceName;
-    private RecyclerView recyclerView;
-    private ProgressBar progressBar;
+    private List<OwnPhoneDetailsHelperClass> ownPhone;
+    private OnFinishedLoading onFinishedLoading;
 
 
-    public RegisteredPhoneAdapter(List<String> deviceName ,List<LatLng> coordinates, List<Integer> batteryLevel, RecyclerView recyclerView, ProgressBar progressBar) {
-        this.deviceName = deviceName;
-        this.coordinates = coordinates;
-        this.batteryLevel = batteryLevel;
-        this.recyclerView = recyclerView;
-        this.progressBar = progressBar;
+    public RegisteredPhoneAdapter(List<OwnPhoneDetailsHelperClass> ownPhone, OnFinishedLoading onFinishedLoading) {
+        this.ownPhone = ownPhone;
+        this.onFinishedLoading = onFinishedLoading;
     }
 
     @NonNull
@@ -51,12 +46,12 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
 
     @Override
     public void onBindViewHolder(@NonNull RegisteredPhoneAdapter.RegisteredPhoneViewHolder holder, int position) {
-        LatLng location = coordinates.get(position);
+        OwnPhoneDetailsHelperClass details = ownPhone.get(position);
+        LatLng location = details.getCoordinates();
         final String[] address = {null};
         Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-        if (position == coordinates.size() - 1) {
-            recyclerView.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.INVISIBLE);
+        if (position == ownPhone.size() - 1) {
+            onFinishedLoading.dataFinishedLoading();
         }
 
         final LatLng finalLocation = location;
@@ -73,9 +68,9 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    holder.registeredPhoneAdapter_deviceName.setText(deviceName.get(position));
+                    holder.registeredPhoneAdapter_deviceName.setText(details.getDeviceName());
                     holder.registeredPhoneAdapter_phoneLocation.setText(address[0]);
-                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getString(R.string.registered_phone_battery_level, batteryLevel.get(position)));
+                    holder.registeredPhoneAdapter_batteryLevel.setText(context.getString(R.string.registered_phone_battery_level, ownPhone.get(position).getBatteryLevel()));
                 }
             });
         }).start();
@@ -84,10 +79,12 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
 
     @Override
     public int getItemCount() {
-        if (coordinates == null) {
+        if (ownPhone == null) {
+            onFinishedLoading.dataFinishedLoading();
             return 0;
         }
-        return coordinates.size();
+        onFinishedLoading.dataFinishedLoading();
+        return ownPhone.size();
     }
 
     public static class RegisteredPhoneViewHolder extends RecyclerView.ViewHolder {
@@ -102,4 +99,8 @@ public class RegisteredPhoneAdapter extends RecyclerView.Adapter<RegisteredPhone
             registeredPhoneAdapter_deviceName = itemView.findViewById(R.id.registeredPhoneAdapter_deviceName);
         }
     }
+    public interface OnFinishedLoading{
+        void dataFinishedLoading();
+    }
+
 }

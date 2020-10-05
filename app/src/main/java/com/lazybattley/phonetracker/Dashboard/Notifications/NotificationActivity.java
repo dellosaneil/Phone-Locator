@@ -126,29 +126,3 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
 interface NotificationFinishedInitialization {
     void displayNotification(List<PendingRequestHelperClass> receivedRequests);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -172,7 +172,7 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
             reference = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
             locationRequest = new LocationRequest();
-            locationRequest.setInterval(3000);
+            locationRequest.setInterval(60000);
             locationRequest.setFastestInterval(2500);
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);

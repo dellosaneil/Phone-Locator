@@ -3,7 +3,6 @@ package com.lazybattley.phonetracker;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.ImageView;
@@ -19,7 +18,6 @@ public class OptionsScreen extends AppCompatActivity {
     private ImageView user_log_in_image;
     private TextView user_log_in_text_view;
     private CardView logInSignUp;
-    private static final String TAG = "OptionsScreen";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -6,14 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -35,11 +31,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity;
 import com.lazybattley.phonetracker.DialogClasses.RegisterPhoneDialog;
+import com.lazybattley.phonetracker.HelperClasses.OwnPhoneDetailsHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
-import com.lazybattley.phonetracker.OptionsScreen;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.RegisteredPhoneAdapter;
 
@@ -50,8 +45,8 @@ import java.util.Map;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVATED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVE;
-import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.AVAILABLE;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.IS_REGISTERED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.TRACEABLE;
@@ -59,16 +54,14 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
 
-public class RegisterPhoneDashboardActivity extends AppCompatActivity implements RegisterPhoneDialog.PhoneDialogListener {
+public class RegisterPhoneDashboardActivity extends AppCompatActivity implements RegisterPhoneDialog.PhoneDialogListener, RegisteredPhoneAdapter.OnFinishedLoading {
 
     public static final String MAIN_PHONE = "mainPhone";
     private MaterialButton registerPhone_registerOrUnregisterButton;
     private boolean state;
     private TextView registerPhone_isRegistered;
     private RecyclerView registerPhone_phonesRegistered;
-    private List<LatLng> coordinates;
-    private List<String> deviceName;
-    private List<Integer> batteryLevel;
+    private List<OwnPhoneDetailsHelperClass> phoneDetails;
     private ProgressBar registerPhone_progressBar;
     public static final String PHONE_REGISTRATION = "isRegistered";
     private SharedPreferences preferences;
@@ -94,9 +87,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         registerPhone_phonesRegistered = findViewById(R.id.registerPhone_phonesRegistered);
         registerPhone_registerOrUnregisterButton = findViewById(R.id.registerPhone_registerOrUnregisterButton);
         registerPhone_isRegistered = findViewById(R.id.registerPhone_isRegistered);
-        coordinates = new ArrayList<>();
-        batteryLevel = new ArrayList<>();
-        deviceName = new ArrayList<>();
         getCurrentStatus();             //checks if the phone is available
         cardViewRegistration();         //checks whether the device is registered.
         initRecyclerView();             //initialize the recyclerview
@@ -257,30 +247,27 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     }
 
     private void initRecyclerView() {
-        DatabaseReference phoneDetails = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES);
-        phoneDetails.addListenerForSingleValueEvent(new ValueEventListener() {
+        DatabaseReference phoneReference = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES);
+        phoneReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                phoneDetails = new ArrayList<>();
                 if (snapshot.exists()) {
                     for (DataSnapshot details : snapshot.getChildren()) {
-                        PhoneTrackHelperClass phoneDetails = details.getValue(PhoneTrackHelperClass.class);
-                        LatLng temp = new LatLng(phoneDetails.getLatitude(), phoneDetails.getLongitude());
-                        int battery = phoneDetails.getBatteryPercent();
-                        deviceName.add(phoneDetails.getDeviceName());
-                        coordinates.add(temp);
-                        batteryLevel.add(battery);
+                        PhoneTrackHelperClass singlePhone = details.getValue(PhoneTrackHelperClass.class);
+                        LatLng phoneLocation = new LatLng(singlePhone.getLatitude(), singlePhone.getLongitude());
+                        int battery = singlePhone.getBatteryPercent();
+                        phoneDetails.add(new OwnPhoneDetailsHelperClass(singlePhone.getDeviceName(), phoneLocation, battery));
                     }
                 } else {
                     Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT).show();
                 }
-                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(deviceName,
-                        coordinates, batteryLevel, registerPhone_phonesRegistered, registerPhone_progressBar);
+                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(phoneDetails , RegisterPhoneDashboardActivity.this);
                 registerPhone_phonesRegistered.setAdapter(adapter);
                 registerPhone_phonesRegistered.setLayoutManager(new LinearLayoutManager(RegisterPhoneDashboardActivity.this));
                 DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(registerPhone_phonesRegistered.getContext(),
                         new LinearLayoutManager(RegisterPhoneDashboardActivity.this).getOrientation());
                 registerPhone_phonesRegistered.addItemDecoration(dividerItemDecoration);
-                registerPhone_progressBar.setVisibility(View.INVISIBLE);
             }
 
             @Override
@@ -327,5 +314,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
 
     public void backButton(View view) {
         onBackPressed();
+    }
+
+    @Override
+    public void dataFinishedLoading() {
+        registerPhone_progressBar.setVisibility(View.INVISIBLE);
+        registerPhone_phonesRegistered.setVisibility(View.VISIBLE);
     }
 }

@@ -80,11 +80,10 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                         permittedUsers.add(user.getFullName());
                         fullNameEmail.add(new FullNameEmailHelperClass(user.getFullName(), user.getEmail()));
                     }
-                    adapter.setPermittedPeople(permittedUsers);
                 } else {
                     Toast.makeText(UserProfileActivity.this, "No Permitted Users.", Toast.LENGTH_SHORT).show();
-                    adapter.setPermittedPeople(permittedUsers);
                 }
+                adapter.setPermittedPeople(permittedUsers);
             }
 
             @Override
@@ -115,6 +114,7 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                                 Toast.makeText(UserProfileActivity.this, "Error", Toast.LENGTH_SHORT).show();
                             }
                         }
+
                         @Override
                         public void onCancelled(@NonNull DatabaseError error) {
 
@@ -124,6 +124,7 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                     Toast.makeText(UserProfileActivity.this, "Error", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
@@ -154,7 +155,7 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                 .show();
     }
 
-    private void removeFromAcceptedList(int position){
+    private void removeFromAcceptedList(int position) {
         String email = fullNameEmail.get(position).getEmail().replace('.', ',');
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(ENCODED_EMAIL).child(ACCEPTED_USERS);
@@ -164,17 +165,18 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
 
     }
 
-    private void removeFromAvailableLocation(String email){
+    private void removeFromAvailableLocation(String email) {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(email).child(AVAILABLE_LOCATIONS).child(ENCODED_EMAIL);
         reference.removeValue();
     }
 
-    private void updateSentRequest(String email){
+    private void updateSentRequest(String email) {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(email).child(SENT_REQUESTS).child(ENCODED_EMAIL);
         Map<String, Object> updateStatus = new HashMap<>();
         updateStatus.put(STATUS, "Removed");
+        updateStatus.put(TIME_SENT, System.currentTimeMillis());
         reference.updateChildren(updateStatus);
 
 

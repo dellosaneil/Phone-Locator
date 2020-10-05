@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,7 +16,6 @@ import java.util.List;
 
 public class UserProfileAdapter extends RecyclerView.Adapter<UserProfileAdapter.UserProfileViewHolder> {
 
-    private Context context;
     private List<String> permittedPeople;
     private OnPersonClicked onPersonClicked;
 
@@ -28,8 +26,7 @@ public class UserProfileAdapter extends RecyclerView.Adapter<UserProfileAdapter.
     @NonNull
     @Override
     public UserProfileViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        context = parent.getContext();
-        View view  = LayoutInflater.from(context).inflate(R.layout.row_user_profile, parent, false);
+        View view  = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_user_profile, parent, false);
         return new UserProfileViewHolder(view);
     }
 

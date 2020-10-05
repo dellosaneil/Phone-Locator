@@ -41,7 +41,7 @@ public class SplashScreen extends AppCompatActivity implements FinishedSplashScr
         Animation animation = AnimationUtils.loadAnimation(this, R.anim.splash_screen_animation);
         splashScreen_logo.setAnimation(animation);
         splashScreen_text.setAnimation(animation);
-        executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        executorService = Executors.newFixedThreadPool(1);
         handler = HandlerCompat.createAsync(Looper.getMainLooper());
         auth = FirebaseAuth.getInstance();
 //

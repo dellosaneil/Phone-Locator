@@ -1,6 +1,7 @@
 package com.lazybattley.phonetracker.Dashboard.RequestLocation;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -36,7 +37,7 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
 
-public class RequestLocationPermission extends AppCompatActivity implements RequestLocationAdapter.RequestClicked {
+public class RequestLocationPermission extends AppCompatActivity implements RequestLocationAdapter.RequestLocationInterface {
 
     private TextInputLayout requestLocation_friendEmail;
     private boolean isUser;
@@ -44,7 +45,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private List<SentRequestHelperClass> sentRequests;
     private DatabaseReference reference;
     private Toast toast;
-    private final String TIME_SENT = "timeSent";
     private LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
     private ProgressBar progressBar;
     private RequestLocationAdapter adapter;
@@ -52,6 +52,9 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
     private String encodedFriendEmail;
     private String decodedUserEmail;
     private long currentTime;
+    private static final String TAG = "RequestLocationPermissi";
+    private ValueEventListener eventListener;
+    private Query updateDataQuery;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +65,44 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         requestLocation_sentRequests = findViewById(R.id.requestLocation_sentRequests);
         decodedUserEmail = ENCODED_EMAIL.replace(',', '.');
         reference = FirebaseDatabase.getInstance().getReference(USERS);
-        initializeRecyclerView(reference);
+        createRecyclerViewAdapter();
+        initializeEventListener();
+        addListener(reference);
+
+
+    }
+
+    private void createRecyclerViewAdapter() {
+        adapter = new RequestLocationAdapter(RequestLocationPermission.this);
+        requestLocation_sentRequests.setAdapter(adapter);
+        linearLayoutManager.setReverseLayout(true);
+        linearLayoutManager.setStackFromEnd(true);
+        requestLocation_sentRequests.setLayoutManager(linearLayoutManager);
+        DividerItemDecoration item = new DividerItemDecoration(RequestLocationPermission.this,
+                linearLayoutManager.getOrientation());
+        requestLocation_sentRequests.addItemDecoration(item);
+    }
+
+    private void initializeEventListener() {
+        eventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.i(TAG, "Updating");
+                sentRequests = new ArrayList<>();
+                if (snapshot.exists()) {
+                    for (DataSnapshot requests : snapshot.getChildren()) {
+                        sentRequests.add(requests.getValue(SentRequestHelperClass.class));
+                    }
+                }
+                adapter.setRequests(sentRequests);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+            }
+        };
+
     }
 
     public void locationUpdate(View view) {
@@ -85,7 +125,7 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
                     isUser = snapshot.exists();
                     if (isUser) {
                         SignUpHelperClass checkMainPhone = snapshot.getValue(SignUpHelperClass.class);
-                        if(!checkMainPhone.getMainPhone().equals("No Phone")){
+                        if (!checkMainPhone.getMainPhone().equals("No Phone")) {
                             sendRequest(reference);
                             requestLocation_friendEmail.setError(null);
                             requestLocation_friendEmail.setErrorEnabled(false);
@@ -95,7 +135,7 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
                             toast = Toast.makeText(RequestLocationPermission.this, "Request Sent", Toast.LENGTH_SHORT);
                             toast.show();
                             requestLocation_friendEmail.getEditText().setText("");
-                        }else{
+                        } else {
                             requestLocation_friendEmail.setError("Main Phone not set.");
                         }
 
@@ -140,6 +180,15 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         }
     }
 
+    public void backButtonPressed(View view) {
+        onBackPressed();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        updateDataQuery.removeEventListener(eventListener);
+    }
 
     //checks if user input an email
     private boolean checkInput(String friendName) {
@@ -163,37 +212,19 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         reference.child(encodedFriendEmail).setValue(new SentRequestHelperClass(decodedFriendEmail, currentTime, "Pending"));
     }
 
-    private void initializeRecyclerView(DatabaseReference reference) {
-        new Thread(() -> {
-            Query query = reference.child(ENCODED_EMAIL).child(SENT_REQUESTS).orderByChild(TIME_SENT);
-            query.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    sentRequests = new ArrayList<>();
-                    if (snapshot.exists()) {
-                        for (DataSnapshot requests : snapshot.getChildren()) {
-                            sentRequests.add(requests.getValue(SentRequestHelperClass.class));
-                        }
-                    }
-                    adapter = new RequestLocationAdapter(RequestLocationPermission.this, sentRequests, progressBar, RequestLocationPermission.this);
-                    requestLocation_sentRequests.setAdapter(adapter);
-                    linearLayoutManager.setReverseLayout(true);
-                    linearLayoutManager.setStackFromEnd(true);
-                    requestLocation_sentRequests.setLayoutManager(linearLayoutManager);
-                    DividerItemDecoration item = new DividerItemDecoration(RequestLocationPermission.this,
-                            linearLayoutManager.getOrientation());
-                    requestLocation_sentRequests.addItemDecoration(item);
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-                }
-            });
-        }).start();
+    private void addListener(DatabaseReference reference) {
+        String TIME_SENT = "timeSent";
+        updateDataQuery = reference.child(ENCODED_EMAIL).child(SENT_REQUESTS).orderByChild(TIME_SENT);
+        updateDataQuery.addValueEventListener(eventListener);
     }
 
     @Override
     public void requestClicked(int position) {
         new SentRequestsDialog(this, sentRequests.get(position).getEmail());
+    }
+
+    @Override
+    public void finishedLoading() {
+        progressBar.setVisibility(View.INVISIBLE);
     }
 }

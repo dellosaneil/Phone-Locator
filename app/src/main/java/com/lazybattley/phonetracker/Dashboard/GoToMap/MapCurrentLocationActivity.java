@@ -109,10 +109,10 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     }
 
     public void ownPhoneLocationTracker(View view) {
-       handleClickCurrentLocation();
+        handleClickCurrentLocation();
     }
 
-    private void handleClickCurrentLocation(){
+    private void handleClickCurrentLocation() {
         if (!swapButtonImage) {
             currentLocation_getCurrentLocation.setImageResource(R.drawable.cancel_button);
             swapButtonImage = true;
@@ -127,7 +127,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     }
 
 
-
     private void multipleMarkerManager() {
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         mMap.clear();
@@ -138,9 +137,9 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         }
         builder.include(markers[1].getPosition());
         LatLngBounds bounds = builder.build();
-        if(activatedAUser){
+        if (activatedAUser) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100), 2000, null);
-        }else{
+        } else {
             mMap.moveCamera(CameraUpdateFactory.newLatLng(markers[1].getPosition()));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(markers[1].getPosition(), zoomLevel));
         }
@@ -205,7 +204,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     public void onPersonClick(int position) {
 //        Log.i(TAG, "onPersonClick: ");
         if (dataReady) {
-            mMap.clear();
+//            mMap.clear();
             indexNumber = position;
             updateMapFocus();
             tracking = true;
@@ -243,6 +242,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 }
                 toast.show();
 
+
             }
 
             @Override
@@ -274,11 +274,10 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
 
     private void updateMapFocus() {
-//        Log.i(TAG, "updateMapFocus: ");
-        mMap.clear();
         LatLng loc = locationDetails.get((indexNumber)).getCoordinates();
         markers[0] = new MarkerOptions().position(loc).title(locationDetails.get(indexNumber).getFullName());
         if (!multipleMarker) {
+            mMap.clear();
             mMap.addMarker(markers[0]);
             mMap.moveCamera(CameraUpdateFactory.newLatLng(loc));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, zoomLevel));
@@ -363,8 +362,8 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             this.currentLocation = currentLocation;
             this.context = context;
             locationRequest = new LocationRequest();
-            locationRequest.setInterval(60000);
-            locationRequest.setFastestInterval(2500);
+            locationRequest.setInterval(10000);
+            locationRequest.setFastestInterval(5000);
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
             callback();

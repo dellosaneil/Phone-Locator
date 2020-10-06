@@ -1,5 +1,9 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.android.gms.maps.model.LatLng;
@@ -30,10 +34,12 @@ public class MapCurrentLocationRecyclerView {
     private ValueEventListener locationCallback;
     private Query[] queries;
     private boolean connected;
+    private Handler handler;
 
 
-    public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface) {
+    public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface, Handler handler) {
         this.mapViewInterface = mapViewInterface;
+        this.handler = handler;
     }
 
 
@@ -127,18 +133,24 @@ public class MapCurrentLocationRecyclerView {
         locationCallback = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
-                String fullName = userLocationDetails.getEmail();
-                LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
-                long updatedAt = userLocationDetails.getUpdatedAt();
-                boolean traceable = userLocationDetails.isAvailable();
-                if (currentLocationList.size() == mainPhoneEmailList.size()) {
-                    int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
-                    currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
-                } else {
-                    currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
-                }
-                mapViewInterface.setRecyclerViewData(currentLocationList);
+                new Thread(()->{
+                    Log.i("Location Thread", Thread.currentThread().getName());
+                    Log.i("Thread Count: ", String.valueOf(Thread.activeCount()));
+                    PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
+                    String fullName = userLocationDetails.getEmail();
+                    LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
+                    long updatedAt = userLocationDetails.getUpdatedAt();
+                    boolean traceable = userLocationDetails.isAvailable();
+                    if (currentLocationList.size() == mainPhoneEmailList.size()) {
+                        int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
+                        currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                    } else {
+                        currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                    }
+                    handler.post(()->mapViewInterface.setRecyclerViewData(currentLocationList));
+
+                }).start();
+
             }
 
             @Override

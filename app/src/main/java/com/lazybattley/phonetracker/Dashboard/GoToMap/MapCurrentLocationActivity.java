@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -79,6 +80,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     private CurrentPhoneLocationMap currentPhoneLocationMap;
     private boolean multipleMarker, swapButtonImage, activatedAUser, tracking, dataReady;
     private FloatingActionButton currentLocation_getCurrentLocation;
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,6 +90,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        this.handler = new Handler(Looper.getMainLooper());
         currentLocation_getCurrentLocation = findViewById(R.id.currentLocation_getCurrentLocation);
         currentPhoneLocationMap = new CurrentPhoneLocationMap(this, this);
         markers = new MarkerOptions[2];
@@ -152,7 +155,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         adapter = new CurrentLocationAdapter(this);
         currentLocation_summary.setAdapter(adapter);
         currentLocation_summary.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewData = new MapCurrentLocationRecyclerView(this);
+        recyclerViewData = new MapCurrentLocationRecyclerView(this,handler);
         recyclerViewData.initializeCallback();
         recyclerViewData.beginSearch();
 
@@ -374,7 +377,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
-                    Log.i(TAG, "onLocationResult: " + Thread.currentThread().getName());
                     currentLocation.ownerCurrentLocation(new LatLng(locationResult.getLastLocation().getLatitude(), locationResult.getLastLocation().getLongitude()));
                 }
             };

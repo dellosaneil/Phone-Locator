@@ -29,6 +29,7 @@ import java.util.Locale;
 
 public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocationAdapter.CurrentLocationViewHolder> {
 
+    private static final String TAG = "CurrentLocationAdapter";
     private Context context;
     private List<CurrentLocationHelperClass> details;
     private OnPersonClick onPersonClick;
@@ -91,13 +92,16 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         return address;
     }
 
-
     public void updateRecyclerView(List<CurrentLocationHelperClass> newList) {
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new CurrentLocationDiffCallback(this.details, newList));
+//        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new CurrentLocationDiffCallback(this.details, newList));
         this.details.clear();
         this.details.addAll(newList);
-        diffResult.dispatchUpdatesTo(this);
+        notifyDataSetChanged();
+//        diffResult.dispatchUpdatesTo(this);
     }
+
+
+
 
     @Override
     public int getItemCount() {

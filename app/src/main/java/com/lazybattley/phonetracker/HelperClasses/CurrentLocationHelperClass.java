@@ -32,4 +32,16 @@ public class CurrentLocationHelperClass {
     public long getLastUpdated() {
         return lastUpdated;
     }
+
+    public void setCoordinates(LatLng coordinates) {
+        this.coordinates = coordinates;
+    }
+
+    public void setLastUpdated(long lastUpdated) {
+        this.lastUpdated = lastUpdated;
+    }
+
+    public void setTraceable(boolean traceable) {
+        this.traceable = traceable;
+    }
 }

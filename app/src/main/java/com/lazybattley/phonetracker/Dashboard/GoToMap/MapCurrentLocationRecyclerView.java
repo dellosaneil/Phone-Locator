@@ -1,8 +1,8 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
 import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -32,18 +32,20 @@ public class MapCurrentLocationRecyclerView {
     private List<CurrentLocationHelperClass> currentLocationList;
     private MapViewCurrentLocationInterface mapViewInterface;
     private ValueEventListener locationCallback;
+    private ValueEventListener availabilityCallback;
     private Query[] queries;
-    private boolean connected;
-    private Handler handler;
+    private Query[] availabilityQuery;
+    private static final String TAG = "MapCurrentLocationRecyc";
 
 
-    public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface, Handler handler) {
+    public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface) {
+
         this.mapViewInterface = mapViewInterface;
-        this.handler = handler;
+        initializeAvailabilityCallback();
+        initializeCallback();
     }
 
-
-    public void beginSearch() {
+    public void beginInitializeRecyclerViewData() {
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS);
         String AVAILABLE_LOCATION = "available_location";
         Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
@@ -55,10 +57,10 @@ public class MapCurrentLocationRecyclerView {
                     for (DataSnapshot emailList : snapshot.getChildren()) {
                         availableLocationEmailList.add(emailList.getKey());
                     }
-                    if(availableLocationEmailList.size() != 0){
+                    if (availableLocationEmailList.size() != 0) {
                         setPhoneEmailList(reference, availableLocationEmailList);
                     }
-                }else{
+                } else {
                     currentLocationList = new ArrayList<>();
                     mapViewInterface.setRecyclerViewData(currentLocationList);
                 }
@@ -108,49 +110,88 @@ public class MapCurrentLocationRecyclerView {
                     .child(REGISTERED_DEVICES)
                     .child(mainPhoneEmailList.get(i).getMainPhone());
         }
-        resumeCallback();
+        singleValueCallback();
+        updateAvailability(availableLocationEmailList);
     }
 
-    public void removeCallback(){
-        if(queries.length != 0 && connected){
-            for(Query query: queries){
-                query.removeEventListener(locationCallback);
+    private void singleValueCallback() {
+        if (queries != null) {
+            for (Query query : queries) {
+                query.addListenerForSingleValueEvent(locationCallback);
             }
-            connected = false;
-        }
-    }
-    
-    public void resumeCallback(){
-        if(queries != null && !connected){
-            for(Query query: queries){
-                query.addValueEventListener(locationCallback);
-            }
-            connected = true;
         }
     }
 
+    public void removeTracking(int previousPosition) {
+        if (queries.length != 0) {
+            queries[previousPosition].removeEventListener(locationCallback);
+        }
+    }
+
+    public void trackDevice(int position) {
+        if (queries != null) {
+            queries[position].addValueEventListener(locationCallback);
+        }
+    }
+
+    public void removeAvailabilityChecker(){
+        for(Query q : availabilityQuery){
+            q.removeEventListener(availabilityCallback);
+        }
+    }
+
+
+    // Updates the tracker information of a User
+    private void updateAvailability(List<String> emails) {
+        availabilityQuery = new Query[emails.size()];
+        for (int i = 0; i < emails.size(); i++) {
+            availabilityQuery[i] = FirebaseDatabase.getInstance().getReference(USERS)
+                    .child(emails.get(i)).child(USER_DETAIL);
+            availabilityQuery[i].addValueEventListener(availabilityCallback);
+        }
+    }
+
+    private void initializeAvailabilityCallback() {
+        availabilityCallback = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
+                    boolean status = userDetails.isTraceable();
+                    String emailAddress = userDetails.getEmail().replace('.',',');
+                    int indexNumber = checkIndexNumber(emailAddress);
+                    currentLocationList.get(indexNumber).setTraceable(status);
+                    mapViewInterface.setRecyclerViewData(currentLocationList);
+                }else{
+                    Log.i(TAG, "onDataChange: SNAPSHOT DOES NOT EXIST" );
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        };
+    }
+
+
+    //Method to update location of Friend User
     public void initializeCallback() {
         locationCallback = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                new Thread(()->{
-                    Log.i("Location Thread", Thread.currentThread().getName());
-                    Log.i("Thread Count: ", String.valueOf(Thread.activeCount()));
-                    PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
-                    String fullName = userLocationDetails.getEmail();
-                    LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
-                    long updatedAt = userLocationDetails.getUpdatedAt();
-                    boolean traceable = userLocationDetails.isAvailable();
-                    if (currentLocationList.size() == mainPhoneEmailList.size()) {
-                        int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
-                        currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
-                    } else {
-                        currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
-                    }
-                    handler.post(()->mapViewInterface.setRecyclerViewData(currentLocationList));
-
-                }).start();
-
+                PhoneTrackHelperClass userLocationDetails = snapshot.getValue(PhoneTrackHelperClass.class);
+                String fullName = userLocationDetails.getEmail();
+                LatLng coordinates = new LatLng(userLocationDetails.getLatitude(), userLocationDetails.getLongitude());
+                long updatedAt = userLocationDetails.getUpdatedAt();
+                boolean traceable = userLocationDetails.isAvailable();
+                if (currentLocationList.size() == mainPhoneEmailList.size()) {
+                    int replaceIndex = checkIndexNumber(userLocationDetails.getEmail());
+                    currentLocationList.set(replaceIndex, new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                } else {
+                    currentLocationList.add(new CurrentLocationHelperClass(fullName, coordinates, updatedAt, traceable));
+                }
+                mapViewInterface.setRecyclerViewData(currentLocationList);
             }
 
             @Override

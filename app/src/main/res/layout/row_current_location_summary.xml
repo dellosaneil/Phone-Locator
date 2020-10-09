@@ -20,11 +20,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginTop="16dp"
-            android:layout_marginEnd="16dp"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/darkBlack"
             app:layout_constraintEnd_toStartOf="@+id/lastUpdated"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toEndOf="@+id/currentLocation_image"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Neil Jedric Yu Dellosa" />

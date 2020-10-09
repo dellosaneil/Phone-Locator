@@ -1,3 +1,4 @@
+
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
 import android.Manifest;
@@ -16,7 +17,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
-import androidx.core.os.HandlerCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,11 +38,8 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.HelperClasses.CurrentLocationHelperClass;
-import com.lazybattley.phonetracker.HelperClasses.MainPhoneEmailHelperClass;
-import com.lazybattley.phonetracker.HelperClasses.PhoneTrackHelperClass;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.CurrentLocationAdapter;
@@ -51,12 +48,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVATED;
-import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
-import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
@@ -68,19 +61,17 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     private GoogleMap mMap;
     private List<CurrentLocationHelperClass> locationDetails;
     private CurrentLocationAdapter adapter;
-    private int indexNumber = -1;
     private MarkerOptions[] markers;
-    private int zoomLevel;
     private final String ZOOM_LEVEL = "zoom";
     private SharedPreferences.Editor editor;
     private MapCurrentLocationRecyclerView recyclerViewData;
     private Toast toast;
     private ProgressBar currentLocation_progressBar;
-    private int prevActivated = -1;
+    private int prevActivated = -1, activatedUserIndex = -1 ,zoomLevel;
     private CurrentPhoneLocationMap currentPhoneLocationMap;
     private boolean multipleMarker, swapButtonImage, activatedAUser, tracking, dataReady;
     private FloatingActionButton currentLocation_getCurrentLocation;
-    private Handler handler;
+    private boolean first = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,7 +81,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        this.handler = new Handler(Looper.getMainLooper());
         currentLocation_getCurrentLocation = findViewById(R.id.currentLocation_getCurrentLocation);
         currentPhoneLocationMap = new CurrentPhoneLocationMap(this, this);
         markers = new MarkerOptions[2];
@@ -119,12 +109,12 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         if (!swapButtonImage) {
             currentLocation_getCurrentLocation.setImageResource(R.drawable.cancel_button);
             swapButtonImage = true;
-            currentPhoneLocationMap.startUpdate();
+            currentPhoneLocationMap.trackOwnDevice();
             multipleMarker = true;
         } else {
             currentLocation_getCurrentLocation.setImageResource(R.drawable.ic_current_location);
             swapButtonImage = false;
-            currentPhoneLocationMap.stopUpdate();
+            currentPhoneLocationMap.stopTrackingOwnDevice();
             multipleMarker = false;
         }
     }
@@ -155,9 +145,8 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         adapter = new CurrentLocationAdapter(this);
         currentLocation_summary.setAdapter(adapter);
         currentLocation_summary.setLayoutManager(new LinearLayoutManager(this));
-        recyclerViewData = new MapCurrentLocationRecyclerView(this,handler);
-        recyclerViewData.initializeCallback();
-        recyclerViewData.beginSearch();
+        recyclerViewData = new MapCurrentLocationRecyclerView(this);
+        recyclerViewData.beginInitializeRecyclerViewData();
 
 
     }
@@ -174,7 +163,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                 zoomLevel = i + 1;
                 editor.putInt(ZOOM_LEVEL, zoomLevel);
                 editor.apply();
-                if (indexNumber != -1) {
+                if (activatedUserIndex != -1) {
                     updateMapFocus();
                 }
             }
@@ -208,10 +197,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 //        Log.i(TAG, "onPersonClick: ");
         if (dataReady) {
 //            mMap.clear();
-            indexNumber = position;
+            activatedUserIndex = position;
             updateMapFocus();
             tracking = true;
             activateTracking();
+            recyclerViewData.trackDevice(position);
         } else {
             Toast.makeText(this, R.string.current_location_summary_loading, Toast.LENGTH_SHORT).show();
         }
@@ -221,10 +211,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 //        Log.i(TAG, "activateTracking: ");
         if (prevActivated != -1) {
             deactivateTracker(prevActivated);
+            recyclerViewData.removeTracking(prevActivated);
         }
-        prevActivated = indexNumber;
+        prevActivated = activatedUserIndex;
         activatedAUser = true;
-        String email = locationDetails.get(indexNumber).getFullName();
+        String email = locationDetails.get(activatedUserIndex).getFullName();
         DatabaseReference reference = FirebaseDatabase.getInstance()
                 .getReference(USERS).child(email).child(USER_DETAIL);
         reference.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -244,8 +235,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                     toast = Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " did not turn on application.", Toast.LENGTH_SHORT);
                 }
                 toast.show();
-
-
             }
 
             @Override
@@ -257,7 +246,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
     private void deactivateTracker() {
         Log.i(TAG, "deactivateTracker: ");
-        String email = locationDetails.get(indexNumber).getFullName();
+        String email = locationDetails.get(activatedUserIndex).getFullName();
         DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(email).child(USER_DETAIL);
         Map<String, Object> deactivate = new HashMap<>();
@@ -277,8 +266,8 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
 
     private void updateMapFocus() {
-        LatLng loc = locationDetails.get((indexNumber)).getCoordinates();
-        markers[0] = new MarkerOptions().position(loc).title(locationDetails.get(indexNumber).getFullName());
+        LatLng loc = locationDetails.get((activatedUserIndex)).getCoordinates();
+        markers[0] = new MarkerOptions().position(loc).title(locationDetails.get(activatedUserIndex).getFullName());
         if (!multipleMarker) {
             mMap.clear();
             mMap.addMarker(markers[0]);
@@ -317,7 +306,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             deactivateTracker();
             activatedAUser = false;
         }
-        recyclerViewData.removeCallback();
+        if(prevActivated != -1){
+            recyclerViewData.removeTracking(prevActivated);
+        }
+        recyclerViewData.removeAvailabilityChecker();
+        currentPhoneLocationMap.stopTrackingOwnDevice();
         prevActivated = -1;
         Log.i(TAG, "onPause: ");
     }
@@ -325,25 +318,25 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        currentPhoneLocationMap.stopUpdate();
+        currentPhoneLocationMap.stopTrackingOwnDevice();
+
         Log.i(TAG, "onDestroy: ");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (!activatedAUser && indexNumber != -1) {
+        if (!activatedAUser && activatedUserIndex != -1) {
             activateTracking();
         }
-        recyclerViewData.resumeCallback();
-
+        if (multipleMarker) {
+            currentPhoneLocationMap.trackOwnDevice();
+        }
+        if(!first){
+            recyclerViewData.trackDevice(activatedUserIndex);
+        }
+        first = false;
         Log.i(TAG, "onResume: ");
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.i(TAG, "onStart: ");
     }
 
     public void backPressed(View view) {
@@ -382,7 +375,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
             };
         }
 
-        private void startUpdate() {
+        private void trackOwnDevice() {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 return;
@@ -391,7 +384,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
 
         }
 
-        private void stopUpdate() {
+        private void stopTrackingOwnDevice() {
             fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
     }

@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,12 +53,16 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
     private TextView userProfile_mainDeviceName;
     private ValueEventListener permittedUsersCallback;
     private Query permittedUsersQuery;
+    private ProgressBar userProfile_progressBarRecycler, userProfile_progressBarMainDevice;
     private static final String TAG = "UserProfileActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_profile);
+        getMainDeviceName();
+        userProfile_progressBarRecycler = findViewById(R.id.userProfile_progressBarRecycler);
+        userProfile_progressBarMainDevice = findViewById(R.id.userProfile_progressBarMainDevice);
         userProfile_mainDeviceName = findViewById(R.id.userProfile_mainDeviceName);
         layoutManager = new LinearLayoutManager(this);
         userProfile_recyclerView = findViewById(R.id.userProfile_recyclerView);
@@ -65,7 +71,6 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
         userProfile_recyclerView.setLayoutManager(layoutManager);
         DividerItemDecoration decoration = new DividerItemDecoration(this, layoutManager.getOrientation());
         userProfile_recyclerView.addItemDecoration(decoration);
-        getMainDeviceName();
         initializePermittedUsersCallback();
     }
 
@@ -74,8 +79,8 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                 .child(ENCODED_EMAIL).child(ACCEPTED_USERS).orderByChild(TIME_SENT);
         permittedUsersQuery.addValueEventListener(permittedUsersCallback);
     }
-    
-    private void removePermittedUserCallback(){
+
+    private void removePermittedUserCallback() {
         permittedUsersQuery.removeEventListener(permittedUsersCallback);
     }
 
@@ -99,11 +104,12 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
         getPermittedUsers();
     }
 
-    private void initializePermittedUsersCallback(){
+    private void initializePermittedUsersCallback() {
         permittedUsersCallback = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Log.i(TAG, "Permitted Users Check");
+                userProfile_progressBarRecycler.setVisibility(View.VISIBLE);
                 fullNameEmail = new ArrayList<>();
                 permittedUsers = new ArrayList<>();
                 if (snapshot.exists()) {
@@ -115,6 +121,7 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                 } else {
                     Toast.makeText(UserProfileActivity.this, "No Permitted Users.", Toast.LENGTH_SHORT).show();
                 }
+                userProfile_progressBarRecycler.setVisibility(View.INVISIBLE);
                 adapter.setPermittedPeople(permittedUsers);
             }
 
@@ -123,13 +130,8 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
 
             }
         };
-        
-        
-        
     }
-    
-    
-    
+
 
     private void getMainDeviceName() {
         Query mainDeviceQuery = FirebaseDatabase.getInstance().getReference(USERS)
@@ -137,6 +139,7 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
         mainDeviceQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                userProfile_progressBarMainDevice.setVisibility(View.VISIBLE);
                 if (snapshot.exists()) {
                     SignUpHelperClass helper = snapshot.getValue(SignUpHelperClass.class);
                     Query q1 = FirebaseDatabase.getInstance().getReference(USERS)
@@ -149,8 +152,9 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                                 PhoneTrackHelperClass name = snapshot.getValue(PhoneTrackHelperClass.class);
                                 userProfile_mainDeviceName.setText(name.getDeviceName());
                             } else {
-                                Toast.makeText(UserProfileActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(UserProfileActivity.this, "No Main Device Found", Toast.LENGTH_SHORT).show();
                             }
+                            userProfile_progressBarMainDevice.setVisibility(View.INVISIBLE);
                         }
 
                         @Override
@@ -159,8 +163,9 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
                         }
                     });
                 } else {
-                    Toast.makeText(UserProfileActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(UserProfileActivity.this, "No Main Device Found", Toast.LENGTH_SHORT).show();
                 }
+
             }
 
             @Override

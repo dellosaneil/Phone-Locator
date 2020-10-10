@@ -33,6 +33,7 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
     private Context context;
     private List<CurrentLocationHelperClass> details;
     private OnPersonClick onPersonClick;
+    private int liveTracking = -1;
 
     public CurrentLocationAdapter(OnPersonClick onPersonClick) {
         this.onPersonClick = onPersonClick;
@@ -64,8 +65,15 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         holder.currentLocation_exactTime.setText(context.getString(R.string.current_location_summary_time, currentTime[0], currentTime[1]));
         holder.currentLocation_location.setText(address);
         holder.currentLocation_fullName.setText(fullName);
-        holder.currentLocation_image.setImageResource(R.drawable.ic_location);
-
+        if(liveTracking != -1){
+            if(liveTracking == position){
+                holder.currentLocation_image.setImageResource(R.drawable.ic_live);
+            }else{
+                holder.currentLocation_image.setImageResource(R.drawable.ic_location);
+            }
+        }else{
+            holder.currentLocation_image.setImageResource(R.drawable.ic_location);
+        }
     }
 
     private String[] milliSecondsToDate(long time) {
@@ -92,6 +100,10 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         return address;
     }
 
+    public void setLiveTracking(int position){
+        liveTracking = position;
+    }
+
     public void updateRecyclerView(List<CurrentLocationHelperClass> newList) {
 //        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new CurrentLocationDiffCallback(this.details, newList));
         this.details.clear();
@@ -99,8 +111,6 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
         notifyDataSetChanged();
 //        diffResult.dispatchUpdatesTo(this);
     }
-
-
 
 
     @Override
@@ -137,13 +147,13 @@ public class CurrentLocationAdapter extends RecyclerView.Adapter<CurrentLocation
 
         @Override
         public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-            if(!oldCurrentLocationList.get(oldItemPosition).getFullName().equals(newCurrentLocationList.get(newItemPosition).getFullName())){
+            if (!oldCurrentLocationList.get(oldItemPosition).getFullName().equals(newCurrentLocationList.get(newItemPosition).getFullName())) {
                 return false;
             }
-            if(oldCurrentLocationList.get(oldItemPosition).getCoordinates() != newCurrentLocationList.get(newItemPosition).getCoordinates()){
+            if (oldCurrentLocationList.get(oldItemPosition).getCoordinates() != newCurrentLocationList.get(newItemPosition).getCoordinates()) {
                 return false;
             }
-            if(oldCurrentLocationList.get(oldItemPosition).getLastUpdated() != newCurrentLocationList.get(newItemPosition).getLastUpdated()){
+            if (oldCurrentLocationList.get(oldItemPosition).getLastUpdated() != newCurrentLocationList.get(newItemPosition).getLastUpdated()) {
                 return false;
             }
             return oldCurrentLocationList.get(oldItemPosition).isTraceable() == newCurrentLocationList.get(newItemPosition).isTraceable();

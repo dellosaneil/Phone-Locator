@@ -1,8 +1,6 @@
 package com.lazybattley.phonetracker.Dashboard.GoToMap;
 
-import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -31,47 +29,59 @@ public class MapCurrentLocationRecyclerView {
     private List<MainPhoneEmailHelperClass> mainPhoneEmailList;
     private List<CurrentLocationHelperClass> currentLocationList;
     private MapViewCurrentLocationInterface mapViewInterface;
-    private ValueEventListener locationCallback;
-    private ValueEventListener availabilityCallback;
-    private Query[] queries;
-    private Query[] availabilityQuery;
+    private ValueEventListener locationCallback, availableLocationCallback, availabilityCallback;
+    private DatabaseReference ref;
+    private Query[] queries, availabilityQuery;
+    private Query availableLocationQuery;
     private static final String TAG = "MapCurrentLocationRecyc";
 
 
     public MapCurrentLocationRecyclerView(MapViewCurrentLocationInterface mapViewInterface) {
-
         this.mapViewInterface = mapViewInterface;
+        setAvailableLocationCallback();
         initializeAvailabilityCallback();
         initializeCallback();
     }
 
     public void beginInitializeRecyclerViewData() {
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference(USERS);
         String AVAILABLE_LOCATION = "available_location";
-        Query query = reference.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
-        query.addValueEventListener(new ValueEventListener() {
+        availableLocationQuery = ref.child(ENCODED_EMAIL).child(AVAILABLE_LOCATION);
+        availableLocationQuery.addValueEventListener(availableLocationCallback);
+    }
+
+    private void setAvailableLocationCallback(){
+        ref = FirebaseDatabase.getInstance().getReference(USERS);
+        availableLocationCallback = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                removeAvailabilityChecker();
                 if (snapshot.exists()) {
                     availableLocationEmailList = new ArrayList<>();
                     for (DataSnapshot emailList : snapshot.getChildren()) {
                         availableLocationEmailList.add(emailList.getKey());
                     }
                     if (availableLocationEmailList.size() != 0) {
-                        setPhoneEmailList(reference, availableLocationEmailList);
+                        setPhoneEmailList(ref, availableLocationEmailList);
                     }
                 } else {
                     currentLocationList = new ArrayList<>();
                     mapViewInterface.setRecyclerViewData(currentLocationList);
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
             }
-        });
+        };
     }
+
+    public void removeAvailableLocationCallback(){
+        if(availableLocationQuery != null){
+            availableLocationQuery.removeEventListener(availableLocationCallback);
+        }
+    }
+
+
 
     private void setPhoneEmailList(DatabaseReference reference, List<String> emailList) {
         final int[] count = {0};
@@ -114,7 +124,7 @@ public class MapCurrentLocationRecyclerView {
         updateAvailability(availableLocationEmailList);
     }
 
-    private void singleValueCallback() {
+    public void singleValueCallback() {
         if (queries != null) {
             for (Query query : queries) {
                 query.addListenerForSingleValueEvent(locationCallback);
@@ -135,8 +145,18 @@ public class MapCurrentLocationRecyclerView {
     }
 
     public void removeAvailabilityChecker(){
-        for(Query q : availabilityQuery){
-            q.removeEventListener(availabilityCallback);
+        if(availabilityQuery != null){
+            for(Query q : availabilityQuery){
+                q.removeEventListener(availabilityCallback);
+            }
+        }
+    }
+
+    public void attachAvailabilityChecker(){
+        if(availabilityQuery != null){
+            for(Query query: availabilityQuery){
+                query.addValueEventListener(availabilityCallback);
+            }
         }
     }
 
@@ -162,8 +182,6 @@ public class MapCurrentLocationRecyclerView {
                     int indexNumber = checkIndexNumber(emailAddress);
                     currentLocationList.get(indexNumber).setTraceable(status);
                     mapViewInterface.setRecyclerViewData(currentLocationList);
-                }else{
-                    Log.i(TAG, "onDataChange: SNAPSHOT DOES NOT EXIST" );
                 }
             }
 

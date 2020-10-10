@@ -5,6 +5,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -102,7 +103,17 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     }
 
     public void ownPhoneLocationTracker(View view) {
-        handleClickCurrentLocation();
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+            handleClickCurrentLocation();
+        }else{
+            if(toast != null){
+                toast.cancel();
+            }
+            toast = Toast.makeText(this, "Please turn on your GPS", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
     }
 
     private void handleClickCurrentLocation() {
@@ -231,8 +242,13 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
                         toast.cancel();
                     }
                     toast = Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " is now activated.", Toast.LENGTH_SHORT);
+                    adapter.setLiveTracking(activatedUserIndex);
                 } else {
+                    if (toast != null) {
+                        toast.cancel();
+                    }
                     toast = Toast.makeText(MapCurrentLocationActivity.this, userDetail.getFullName() + " did not turn on application.", Toast.LENGTH_SHORT);
+                    adapter.setLiveTracking(-1);
                 }
                 toast.show();
             }
@@ -309,6 +325,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         if(prevActivated != -1){
             recyclerViewData.removeTracking(prevActivated);
         }
+        recyclerViewData.removeAvailableLocationCallback();
         recyclerViewData.removeAvailabilityChecker();
         currentPhoneLocationMap.stopTrackingOwnDevice();
         prevActivated = -1;
@@ -319,7 +336,6 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     protected void onDestroy() {
         super.onDestroy();
         currentPhoneLocationMap.stopTrackingOwnDevice();
-
         Log.i(TAG, "onDestroy: ");
     }
 
@@ -332,8 +348,11 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
         if (multipleMarker) {
             currentPhoneLocationMap.trackOwnDevice();
         }
-        if(!first){
+        if(!first && activatedUserIndex != -1){
             recyclerViewData.trackDevice(activatedUserIndex);
+        }
+        if(!first){
+            recyclerViewData.attachAvailabilityChecker();
         }
         first = false;
         Log.i(TAG, "onResume: ");

@@ -200,8 +200,8 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
                     }
                 }
             };
-
         }
+
 
         private void startUpdate() {
             if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&

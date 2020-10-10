@@ -3,6 +3,7 @@ package com.lazybattley.phonetracker.DialogClasses;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -39,7 +40,7 @@ public class RespondRequestDialog {
     private String encodedFriendEmail;
     private DatabaseReference reference;
     private String phoneOwnerFullName;
-    private String friendFullName;
+    private String friendFullName = null;
 
     public RespondRequestDialog(Activity activity, String encodedFriendEmail, String phoneOwnerFullName) {
         this.phoneOwnerFullName = phoneOwnerFullName;
@@ -129,6 +130,11 @@ public class RespondRequestDialog {
     //reflected on current user table.
     private void acceptedRequestUser(DatabaseReference reference) {
         reference = reference.child(ENCODED_EMAIL).child(ACCEPTED_USERS).child(encodedFriendEmail);
-        reference.setValue(new AcceptedUsersHelperClass(friendFullName, encodedFriendEmail.replace(',', '.'), System.currentTimeMillis()));
+        if(friendFullName == null){
+            DatabaseReference tempReference = FirebaseDatabase.getInstance().getReference(USERS);
+            acceptedRequestUser(tempReference);
+        }else{
+            reference.setValue(new AcceptedUsersHelperClass(friendFullName, encodedFriendEmail.replace(',', '.'), System.currentTimeMillis()));
+        }
     }
 }

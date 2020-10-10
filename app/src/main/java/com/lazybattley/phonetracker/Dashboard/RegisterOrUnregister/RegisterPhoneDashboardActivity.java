@@ -2,10 +2,12 @@ package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -72,6 +74,8 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     public static final String EMAIL = "email";
     private static final String TAG = "RegisterPhoneDashboardA";
     private boolean isMainDevice;
+    private LocationManager locationManager;
+    private Toast toast;
 
 
     @SuppressLint("HardwareIds")
@@ -90,8 +94,8 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         getCurrentStatus();             //checks if the phone is available
         cardViewRegistration();         //checks whether the device is registered.
         initRecyclerView();             //initialize the recyclerview
-
     }
+
 
     private void cardViewRegistration() {
         if (isRegistered) {
@@ -109,14 +113,13 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         }
     }
 
-    private void updateActiveStatus(){
+    private void updateActiveStatus() {
         DatabaseReference reference = FirebaseDatabase.getInstance()
                 .getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
         Map<String, Object> updateActiveStatus = new HashMap<>();
         updateActiveStatus.put(ACTIVATED, false);
         reference.updateChildren(updateActiveStatus);
     }
-
 
 
     private void mainDeviceCheck() {
@@ -130,7 +133,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
                         isMainDevice = true;
                     }
                 } else {
-                    Toast.makeText(RegisterPhoneDashboardActivity.this, TAG, Toast.LENGTH_SHORT).show();
+                    if(toast != null){
+                        toast.cancel();
+                    }
+                    toast = Toast.makeText(RegisterPhoneDashboardActivity.this, TAG, Toast.LENGTH_SHORT);
+                    toast.show();
                 }
             }
 
@@ -154,7 +161,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
                 if (userDetails.getMainPhone().equals("No Phone")) {
-                    Toast.makeText(RegisterPhoneDashboardActivity.this, "This phone is the 'Main Phone'.", Toast.LENGTH_SHORT).show();
+                    if(toast != null){
+                        toast.cancel();
+                    }
+                    toast = Toast.makeText(RegisterPhoneDashboardActivity.this, "This phone is the 'Main Phone'.", Toast.LENGTH_SHORT);
+                    toast.show();
                     Map<String, Object> updateMainPhone = new HashMap<>();
                     updateMainPhone.put(MAIN_PHONE, buildId);
                     query.updateChildren(updateMainPhone);
@@ -213,20 +224,35 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             updateActiveStatus();
 
         } else {
-            //Phone is currently tracked
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                this.startForegroundService(serviceIntent);
-            } else {
-                startService(serviceIntent);
+            if(checkGPSStatus()){
+                //Phone is currently tracked
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    this.startForegroundService(serviceIntent);
+                } else {
+                    startService(serviceIntent);
+                }
+                deviceStatusUpdate.put(AVAILABLE, true);
+                registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
+            }else{
+                state = false;
+                if(toast != null){
+                    toast.cancel();
+                }
+                toast = Toast.makeText(this, "Please enable your GPS.", Toast.LENGTH_SHORT);
+                toast.show();
             }
-            deviceStatusUpdate.put(AVAILABLE, true);
-            registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
         }
         if (isMainDevice) {
             traceableHandler(state);
         }
         update.updateChildren(deviceStatusUpdate);
     }
+
+    private boolean checkGPSStatus() {
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
 
     private void traceableHandler(boolean traceability) {
         DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
@@ -260,9 +286,13 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
                         phoneDetails.add(new OwnPhoneDetailsHelperClass(singlePhone.getDeviceName(), phoneLocation, battery));
                     }
                 } else {
-                    Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT).show();
+                    if(toast != null){
+                        toast.cancel();
+                    }
+                    toast = Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT);
+                    toast.show();
                 }
-                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(phoneDetails , RegisterPhoneDashboardActivity.this);
+                RegisteredPhoneAdapter adapter = new RegisteredPhoneAdapter(phoneDetails, RegisterPhoneDashboardActivity.this);
                 registerPhone_phonesRegistered.setAdapter(adapter);
                 registerPhone_phonesRegistered.setLayoutManager(new LinearLayoutManager(RegisterPhoneDashboardActivity.this));
                 DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(registerPhone_phonesRegistered.getContext(),

@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -45,16 +47,18 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
     private NotificationBackgroundThread notificationThread;
     private String phoneOwnerFullName;
     private boolean isLoading = true;
+    private ProgressBar notification_progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
+        notification_progressBar = findViewById(R.id.notification_progressBar);
         setPhoneOwnerFullName();
         notification_recyclerView = findViewById(R.id.notification_recyclerView);
         layoutManager = new LinearLayoutManager(this);
         initializeRecyclerView();
-        notificationThread = new NotificationBackgroundThread(this,this);
+        notificationThread = new NotificationBackgroundThread(this);
     }
 
     private void setPhoneOwnerFullName(){
@@ -128,15 +132,23 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
         adapter.setRequests(requests);
     }
 
+    @Override
+    public void finishedLoading() {
+        notification_progressBar.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void notificationLoading() {
+        notification_progressBar.setVisibility(View.VISIBLE);
+    }
+
     private static class NotificationBackgroundThread{
         private List<PendingRequestHelperClass> receivedRequests;
-        private Context context;
         private NotificationFinishedInitialization callback;
         private ValueEventListener requestListener;
         private Query requestQuery;
 
-        public NotificationBackgroundThread(Context context, NotificationFinishedInitialization callback) {
-            this.context = context;
+        public NotificationBackgroundThread(NotificationFinishedInitialization callback) {
             this.receivedRequests = new ArrayList<>();
             this.callback = callback;
             initializeRequestQuery();
@@ -156,15 +168,15 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
             requestListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    callback.notificationLoading();
                     receivedRequests = new ArrayList<>();
                     if (snapshot.exists()) {
                         for (DataSnapshot requests : snapshot.getChildren()) {
                             receivedRequests.add(requests.getValue(PendingRequestHelperClass.class));
                         }
-                    } else {
-                        Toast.makeText(context, "No notification", Toast.LENGTH_SHORT).show();
                     }
                     callback.displayNotification(receivedRequests);
+                    callback.finishedLoading();
                 }
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
@@ -177,4 +189,6 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
 
 interface NotificationFinishedInitialization {
     void displayNotification(List<PendingRequestHelperClass> receivedRequests);
+    void finishedLoading();
+    void notificationLoading();
 }

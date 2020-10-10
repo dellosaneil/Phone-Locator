@@ -1,7 +1,10 @@
 package com.lazybattley.phonetracker.Dashboard.Notifications;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,20 +20,19 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.DialogClasses.RespondRequestDialog;
 import com.lazybattley.phonetracker.HelperClasses.PendingRequestHelperClass;
+import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.RecyclerViewAdapters.NotificationAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.NOTIFICATIONS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.PENDING_REQUESTS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.TIME_SENT;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
+import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
 
 public class NotificationActivity extends AppCompatActivity implements NotificationAdapter.NotificationClick, NotificationFinishedInitialization {
@@ -39,18 +41,65 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
     private LinearLayoutManager layoutManager;
     private List<PendingRequestHelperClass> requests;
     private NotificationAdapter adapter;
+    private static final String TAG = "NotificationActivity";
+    private NotificationBackgroundThread notificationThread;
+    private String phoneOwnerFullName;
+    private boolean isLoading = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notifications);
+        setPhoneOwnerFullName();
         notification_recyclerView = findViewById(R.id.notification_recyclerView);
         layoutManager = new LinearLayoutManager(this);
-        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         initializeRecyclerView();
+        notificationThread = new NotificationBackgroundThread(this,this);
+    }
 
-        NotificationBackgroundThread notificationThread = new NotificationBackgroundThread(this, executorService, this);
-        notificationThread.executeThread();
+    private void setPhoneOwnerFullName(){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String preferenceEmail = preferences.getString("SIGN_UP_EMAIL", "noEmail");
+        if(preferenceEmail.equals(ENCODED_EMAIL)){
+            phoneOwnerFullName = preferences.getString("FULL_NAME", null);
+            isLoading = false;
+        }else{
+            Query query = FirebaseDatabase.getInstance().getReference(USERS)
+                    .child(ENCODED_EMAIL).child(USER_DETAIL);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if(snapshot.exists()){
+                        SignUpHelperClass name = snapshot.getValue(SignUpHelperClass.class);
+                        phoneOwnerFullName = name.getFullName();
+                        SharedPreferences.Editor saveEmail = preferences.edit();
+                        saveEmail.putString("SIGN_UP_EMAIL", ENCODED_EMAIL);
+                        saveEmail.putString("FULL_NAME", phoneOwnerFullName);
+                        saveEmail.apply();
+                        isLoading = false;
+                    }else{
+                        Toast.makeText(NotificationActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        notificationThread.detachListener();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        notificationThread.attachListener();
     }
 
     private void initializeRecyclerView() {
@@ -65,7 +114,12 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
 
     @Override
     public void onClickNotification(int position) {
-        new RespondRequestDialog(this, requests.get(position).getEmail());
+        if(!isLoading){
+            new RespondRequestDialog(this, requests.get(position).getEmail(), phoneOwnerFullName);
+        }else{
+            Toast.makeText(this, "Loading data... Press button again", Toast.LENGTH_SHORT).show();
+        }
+        
     }
 
     @Override
@@ -74,23 +128,32 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
         adapter.setRequests(requests);
     }
 
-    private static class NotificationBackgroundThread implements Runnable {
+    private static class NotificationBackgroundThread{
         private List<PendingRequestHelperClass> receivedRequests;
         private Context context;
-        private Executor executor;
         private NotificationFinishedInitialization callback;
+        private ValueEventListener requestListener;
+        private Query requestQuery;
 
-        public NotificationBackgroundThread(Context context, Executor executor, NotificationFinishedInitialization callback) {
+        public NotificationBackgroundThread(Context context, NotificationFinishedInitialization callback) {
             this.context = context;
-            this.executor = executor;
             this.receivedRequests = new ArrayList<>();
             this.callback = callback;
+            initializeRequestQuery();
+            requestQuery = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).orderByChild(TIME_SENT);
         }
 
-        private void requests() {
+        private void attachListener() {
             //Populate the RecyclerView with location request notifications.
-            Query query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(NOTIFICATIONS).child(PENDING_REQUESTS).orderByChild(TIME_SENT);
-            query.addValueEventListener(new ValueEventListener() {
+            requestQuery.addValueEventListener(requestListener);
+        }
+
+        private void detachListener(){
+            requestQuery.removeEventListener(requestListener);
+        }
+
+        private void initializeRequestQuery(){
+            requestListener = new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     receivedRequests = new ArrayList<>();
@@ -103,22 +166,11 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
                     }
                     callback.displayNotification(receivedRequests);
                 }
-
-
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
 
                 }
-            });
-        }
-
-        @Override
-        public void run() {
-            requests();
-        }
-
-        public void executeThread() {
-            executor.execute(this);
+            };
         }
     }
 }

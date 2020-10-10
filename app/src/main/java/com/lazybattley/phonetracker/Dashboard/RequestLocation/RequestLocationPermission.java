@@ -87,7 +87,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
         eventListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                Log.i(TAG, "Updating");
                 sentRequests = new ArrayList<>();
                 if (snapshot.exists()) {
                     for (DataSnapshot requests : snapshot.getChildren()) {
@@ -95,7 +94,6 @@ public class RequestLocationPermission extends AppCompatActivity implements Requ
                     }
                 }
                 adapter.setRequests(sentRequests);
-
             }
 
             @Override

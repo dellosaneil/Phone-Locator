@@ -1,7 +1,9 @@
 package com.lazybattley.phonetracker.LogInSignUp;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -27,11 +29,15 @@ public class SignUpActivityOne extends AppCompatActivity {
     private MaterialButton signUp_next;
     private DatabaseReference reference;
     private FirebaseAuth auth;
+    private SharedPreferences preferences;
+    private SharedPreferences.Editor savePreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_one);
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        savePreferences = preferences.edit();
         FirebaseDatabase rootNode = FirebaseDatabase.getInstance();
         reference = rootNode.getReference(USERS);
         signUp_email = findViewById(R.id.signUp_email);
@@ -103,6 +109,9 @@ public class SignUpActivityOne extends AppCompatActivity {
                                             addNewUser(user.getEmail(), encodeEmail(user.getEmail()), fullName);
                                             editable();
                                             signUp_redirect();
+                                            savePreferences.putString("FULL_NAME", fullName);
+                                            savePreferences.putString("SIGN_UP_EMAIL", encodeEmail(user.getEmail()));
+                                            savePreferences.commit();
                                             finish();
                                         } else {
                                             signUp_email.setError(task1.getException().getMessage());

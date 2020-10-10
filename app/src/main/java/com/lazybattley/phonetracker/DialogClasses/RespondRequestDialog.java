@@ -38,15 +38,15 @@ public class RespondRequestDialog {
     private Activity activity;
     private String encodedFriendEmail;
     private DatabaseReference reference;
-    private volatile String availableUsersFullName;
-    private volatile String acceptedUsersFullName;
+    private String phoneOwnerFullName;
+    private String friendFullName;
 
-    public RespondRequestDialog(Activity activity, String encodedFriendEmail) {
+    public RespondRequestDialog(Activity activity, String encodedFriendEmail, String phoneOwnerFullName) {
+        this.phoneOwnerFullName = phoneOwnerFullName;
         this.activity = activity;
         this.encodedFriendEmail = encodedFriendEmail.replace('.', ',');
         this.reference = FirebaseDatabase.getInstance().getReference(USERS);
-        setAvailableLocationFullName(this.reference);
-        setAcceptedUsersFullName(this.reference);
+        setFriendFullName(reference);
         createAlertDialog();
     }
 
@@ -82,7 +82,7 @@ public class RespondRequestDialog {
                 SignUpHelperClass details = snapshot.getValue(SignUpHelperClass.class);
                 mainPhone[0] = details.getMainPhone();
                 reference.child(encodedFriendEmail).child(AVAILABLE_LOCATIONS).child(ENCODED_EMAIL)
-                        .setValue(new AvailableLocationHelperClass(availableUsersFullName, ENCODED_EMAIL, time, mainPhone[0]));
+                        .setValue(new AvailableLocationHelperClass(phoneOwnerFullName, ENCODED_EMAIL, time, mainPhone[0]));
             }
 
             @Override
@@ -92,29 +92,13 @@ public class RespondRequestDialog {
         });
     }
 
-    private void setAvailableLocationFullName(DatabaseReference reference) {
-        Query query = reference.child(ENCODED_EMAIL).child(USER_DETAILS);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
-                availableUsersFullName = userDetails.getFullName();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-    }
-
-    private void setAcceptedUsersFullName(DatabaseReference reference) {
+    private void setFriendFullName(DatabaseReference reference) {
         Query query = reference.child(encodedFriendEmail).child(USER_DETAILS);
         query.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
-                acceptedUsersFullName = userDetails.getFullName();
+                friendFullName = userDetails.getFullName();
             }
 
             @Override
@@ -145,6 +129,6 @@ public class RespondRequestDialog {
     //reflected on current user table.
     private void acceptedRequestUser(DatabaseReference reference) {
         reference = reference.child(ENCODED_EMAIL).child(ACCEPTED_USERS).child(encodedFriendEmail);
-        reference.setValue(new AcceptedUsersHelperClass(acceptedUsersFullName, encodedFriendEmail.replace(',', '.'), System.currentTimeMillis()));
+        reference.setValue(new AcceptedUsersHelperClass(friendFullName, encodedFriendEmail.replace(',', '.'), System.currentTimeMillis()));
     }
 }

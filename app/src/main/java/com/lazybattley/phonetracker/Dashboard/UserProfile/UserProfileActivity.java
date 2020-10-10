@@ -49,6 +49,9 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
     private UserProfileAdapter adapter;
     private LinearLayoutManager layoutManager;
     private TextView userProfile_mainDeviceName;
+    private ValueEventListener permittedUsersCallback;
+    private Query permittedUsersQuery;
+    private static final String TAG = "UserProfileActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,20 +61,49 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
         layoutManager = new LinearLayoutManager(this);
         userProfile_recyclerView = findViewById(R.id.userProfile_recyclerView);
         adapter = new UserProfileAdapter(this);
-        getPermittedUsers();
         userProfile_recyclerView.setAdapter(adapter);
         userProfile_recyclerView.setLayoutManager(layoutManager);
         DividerItemDecoration decoration = new DividerItemDecoration(this, layoutManager.getOrientation());
         userProfile_recyclerView.addItemDecoration(decoration);
         getMainDeviceName();
+        initializePermittedUsersCallback();
     }
 
     private void getPermittedUsers() {
-        Query query = FirebaseDatabase.getInstance().getReference(USERS)
+        permittedUsersQuery = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(ENCODED_EMAIL).child(ACCEPTED_USERS).orderByChild(TIME_SENT);
-        query.addValueEventListener(new ValueEventListener() {
+        permittedUsersQuery.addValueEventListener(permittedUsersCallback);
+    }
+    
+    private void removePermittedUserCallback(){
+        permittedUsersQuery.removeEventListener(permittedUsersCallback);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "onDestroy: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG, "onPause: ");
+        removePermittedUserCallback();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume: ");
+        getPermittedUsers();
+    }
+
+    private void initializePermittedUsersCallback(){
+        permittedUsersCallback = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Log.i(TAG, "Permitted Users Check");
                 fullNameEmail = new ArrayList<>();
                 permittedUsers = new ArrayList<>();
                 if (snapshot.exists()) {
@@ -90,13 +122,19 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
             public void onCancelled(@NonNull DatabaseError error) {
 
             }
-        });
+        };
+        
+        
+        
     }
+    
+    
+    
 
     private void getMainDeviceName() {
-        Query query = FirebaseDatabase.getInstance().getReference(USERS)
+        Query mainDeviceQuery = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(ENCODED_EMAIL).child(USER_DETAIL);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
+        mainDeviceQuery.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {

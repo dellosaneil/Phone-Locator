@@ -142,6 +142,11 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
         notification_progressBar.setVisibility(View.VISIBLE);
     }
 
+    @Override
+    public void noNotification() {
+        Toast.makeText(this, "No New Notification", Toast.LENGTH_SHORT).show();
+    }
+
     private static class NotificationBackgroundThread{
         private List<PendingRequestHelperClass> receivedRequests;
         private NotificationFinishedInitialization callback;
@@ -174,6 +179,8 @@ public class NotificationActivity extends AppCompatActivity implements Notificat
                         for (DataSnapshot requests : snapshot.getChildren()) {
                             receivedRequests.add(requests.getValue(PendingRequestHelperClass.class));
                         }
+                    }else{
+                        callback.noNotification();
                     }
                     callback.displayNotification(receivedRequests);
                     callback.finishedLoading();
@@ -191,4 +198,5 @@ interface NotificationFinishedInitialization {
     void displayNotification(List<PendingRequestHelperClass> receivedRequests);
     void finishedLoading();
     void notificationLoading();
+    void noNotification();
 }

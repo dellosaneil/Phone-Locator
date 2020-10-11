@@ -8,17 +8,6 @@
     android:transitionName="mainDashboard_toNotification"
     tools:context=".Dashboard.Notifications.NotificationActivity">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/card1_color"
-        android:minHeight="?attr/actionBarSize"
-        android:theme="?attr/actionBarTheme"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/notification_recyclerView"
         android:layout_width="0dp"
@@ -35,20 +24,6 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.25" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/notification_filter"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:backgroundTint="#00000000"
-        android:src="@drawable/ic_filter"
-        app:elevation="0dp"
-        app:fabSize="normal"
-        app:layout_constraintBottom_toBottomOf="@+id/toolbar"
-        app:layout_constraintEnd_toEndOf="@+id/toolbar"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"
-        app:maxImageSize="36dp" />
-
     <ProgressBar
         android:id="@+id/notification_progressBar"
         style="?android:attr/progressBarStyle"
@@ -58,6 +33,17 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/notification_recyclerView" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/notifications"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

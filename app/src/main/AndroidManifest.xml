@@ -8,11 +8,15 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
+
+<!--
+        android:name=".PersistentNotification"-->
+
     <application
-        android:name=".PersistentNotification"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -55,7 +59,7 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
-        <service android:name=".Dashboard.RegisterOrUnregister.PhoneLocationService" />
+        <service android:name=".Dashboard.RegisterOrUnregister.PhoneLocationService"/>
     </application>
 
 </manifest>

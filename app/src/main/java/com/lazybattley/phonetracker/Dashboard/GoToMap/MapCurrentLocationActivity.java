@@ -31,6 +31,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -99,6 +100,7 @@ public class MapCurrentLocationActivity extends FragmentActivity implements OnMa
     @Override
     public void ownerCurrentLocation(LatLng location) {
         markers[1] = new MarkerOptions().position(location).title("Current Location");
+        markers[1].icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW));
         multipleMarkerManager();
     }
 

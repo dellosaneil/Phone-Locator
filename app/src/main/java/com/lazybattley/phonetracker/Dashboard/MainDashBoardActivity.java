@@ -37,8 +37,6 @@ public class MainDashBoardActivity extends AppCompatActivity {
     public static final String USER_DETAIL = "user_detail";
     public static final String REGISTERED_DEVICES = "registered_devices";
 
-    public static final int LOCATION_REQUEST_CODE = 1;
-    public static final int LOCATION_REQUEST_FOREGROUND_CODE = 9;
 
     public static final String PENDING_REQUESTS = "pending_requests";
     public static final String SENT_REQUESTS = "sent_requests";

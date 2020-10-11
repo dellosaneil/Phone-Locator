@@ -8,41 +8,40 @@
     android:background="@color/snow"
     tools:context=".LogInSignUp.LogInActivity">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/logIn_logo"
             android:layout_width="75dp"
             android:layout_height="75dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
             android:contentDescription="@string/logo_description"
+            android:src="@drawable/app_logo"
             android:transitionName="log_in_transition_logo"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:src="@drawable/app_logo" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="32dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="20dp"
             android:backgroundTint="@color/snow"
             android:elevation="10dp"
+            android:padding="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/guideline12"
+            app:layout_constraintStart_toStartOf="@+id/guideline11"
             app:layout_constraintTop_toBottomOf="@+id/logIn_logo">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="20dp">
+                android:layout_height="wrap_content">
 
                 <TextView
                     android:id="@+id/welcome_back_TV"
@@ -65,17 +64,21 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginTop="32dp"
+                    android:layout_marginEnd="20dp"
                     android:hint="@string/enter_email"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:textColor="@color/darkBlack"
                     app:boxStrokeColor="@color/darkBlack"
+                    app:endIconMode="clear_text"
                     app:hintTextColor="@color/darkBlack"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.875"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/welcome_back_TV"
-                    app:startIconDrawable="@drawable/ic_log_in_user"
-                    app:endIconMode="clear_text">
+                    app:startIconDrawable="@drawable/ic_log_in_user">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:layout_width="match_parent"
@@ -90,7 +93,11 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="16dp"
+                    android:layout_marginEnd="20dp"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:textColor="@color/darkBlack"
                     app:boxStrokeColor="@color/darkBlack"
                     app:hintTextColor="@color/darkBlack"
@@ -112,20 +119,22 @@
                     android:id="@+id/logInUser"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="32dp"
+                    android:layout_marginTop="16dp"
                     android:backgroundTint="@color/buttonColor"
                     android:onClick="logInUser"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
                     android:text="@string/log_in"
                     android:textColor="@color/darkBlack"
                     android:transitionName="log_in_transition_button"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="@+id/log_in_password"
+                    app:layout_constraintStart_toStartOf="@+id/log_in_password"
                     app:layout_constraintTop_toBottomOf="@+id/log_in_password" />
 
                 <com.google.android.material.button.MaterialButton
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginEnd="8dp"
                     android:background="#00000000"
                     android:minWidth="0dp"
                     android:minHeight="0dp"
@@ -133,7 +142,8 @@
                     android:padding="2dp"
                     android:text="@string/sign_up"
                     android:textColor="#0000EE"
-                    app:layout_constraintEnd_toEndOf="@+id/logInUser"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/logInUser" />
 
                 <ProgressBar
@@ -152,8 +162,22 @@
 
         </androidx.cardview.widget.CardView>
 
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline11"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.08" />
 
-    </LinearLayout>
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.92" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </ScrollView>

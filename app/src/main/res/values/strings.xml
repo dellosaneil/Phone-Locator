@@ -64,7 +64,7 @@
     <string name="persistent_notification_some_string">Location saved</string>
 
     <!--    LocationTrackerService-->
-    <string name="location_service_tracked">Location is being sent to database.</string>
+    <string name="location_service_tracked">Tap here to Stop.</string>
     <string name="location_service_turned_on">Tracking On</string>
 
 
@@ -98,6 +98,8 @@
     <string name="notification_dialog_decline">Decline</string>
     <string name="title_activity_map_current_location">Map</string>
 
+<!--    Notifications-->
+    <string name="notifications">All Pending Requests</string>
 
     <!--    Current Location Summary-->
     <string name="current_location_summary_updated_at">Updated At:</string>

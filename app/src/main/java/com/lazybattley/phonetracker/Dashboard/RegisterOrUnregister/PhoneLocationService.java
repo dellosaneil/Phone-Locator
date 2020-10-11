@@ -3,15 +3,16 @@ package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
-import android.os.Handler;
+import android.os.Build;
 import android.os.IBinder;
-import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
@@ -20,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
-import androidx.core.os.HandlerCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -36,24 +36,17 @@ import com.google.firebase.database.ValueEventListener;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVATED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.AVAILABLE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.IS_REGISTERED;
-import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.LOCATION_REQUEST_CODE;
-import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.LOCATION_REQUEST_FOREGROUND_CODE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.TRACEABLE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
-import static com.lazybattley.phonetracker.PersistentNotification.CHANNEL_ID;
 
 public class PhoneLocationService extends Service implements BatteryDrainHandler {
 
@@ -61,14 +54,20 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
     private boolean activated;
     private static final String TAG = "PhoneLocationService";
     private PhoneLocationTracker locationTracker;
+    public static final String CHANNEL_ID = "Notification";
+    private Query activatedStatusQuery;
+    private ValueEventListener trackerActivatedValueListener;
+    private boolean attached;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.i(TAG, "onCreate: ");
         @SuppressLint("HardwareIds") String buildId = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         locationTracker = new PhoneLocationTracker(this, buildId, this);
-        trackerActivated();
-
+        activatedStatusQuery = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
+        initializeListenerCallback();
+        attachTracker();
     }
 
     @Nullable
@@ -79,19 +78,36 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "onStartCommand: ");
         state = intent.getBooleanExtra(IS_REGISTERED, false);
+        createNotificationChannel();
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, LOCATION_REQUEST_CODE, notificationIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(getString(R.string.location_service_turned_on))
                 .setContentText(getString(R.string.location_service_tracked))
                 .setSmallIcon(R.drawable.current_location)
                 .setContentIntent(pendingIntent)
                 .build();
-        startForeground(LOCATION_REQUEST_FOREGROUND_CODE, notification);
-
+        startForeground(1, notification);
         return START_STICKY;
     }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel serviceChannel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Location Tracker",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(serviceChannel);
+        }
+    }
+
+
+
 
     private void handleEvent(boolean active) {
         if (active && state) {
@@ -102,14 +118,26 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
 
         if (!state) {
             stopForeground(true);
-//            stopSelf();
+            if(attached){
+                activatedStatusQuery.removeEventListener(trackerActivatedValueListener);
+                attached = false;
+            }
+        }else{
+            if(!attached){
+                attached = true;
+                attachTracker();
+            }
+
         }
     }
 
 
-    private void trackerActivated() {
-        Query query = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
-        query.addValueEventListener(new ValueEventListener() {
+    private void attachTracker() {
+        activatedStatusQuery.addValueEventListener(trackerActivatedValueListener);
+    }
+
+    private void initializeListenerCallback(){
+        trackerActivatedValueListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -126,7 +154,10 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
             public void onCancelled(@NonNull DatabaseError error) {
                 Toast.makeText(PhoneLocationService.this, error.getMessage(), Toast.LENGTH_SHORT).show();
             }
-        });
+        };
+
+
+
     }
 
 
@@ -139,11 +170,6 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
         unTraceable.put(ACTIVATED, false);
         update.updateChildren(unTraceable);
         handleEvent(false);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     //************************************************************************************************************************************************************
@@ -170,7 +196,10 @@ public class PhoneLocationService extends Service implements BatteryDrainHandler
             this.listener = listener;
             this.context = context;
             batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-            reference = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
+            reference = FirebaseDatabase.getInstance().getReference(USERS)
+                    .child(ENCODED_EMAIL)
+                    .child(REGISTERED_DEVICES)
+                    .child(buildId);
             locationRequest = new LocationRequest();
             locationRequest.setInterval(10000);
             locationRequest.setFastestInterval(5000);

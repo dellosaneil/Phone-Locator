@@ -44,7 +44,7 @@ public class SplashScreen extends AppCompatActivity implements FinishedSplashScr
         executorService = Executors.newFixedThreadPool(1);
         handler = HandlerCompat.createAsync(Looper.getMainLooper());
         auth = FirebaseAuth.getInstance();
-//
+
 //        SharedPreferences temp = PreferenceManager.getDefaultSharedPreferences(this);
 //        SharedPreferences.Editor editor = temp.edit();
 //        editor.putBoolean("isRegistered", false);

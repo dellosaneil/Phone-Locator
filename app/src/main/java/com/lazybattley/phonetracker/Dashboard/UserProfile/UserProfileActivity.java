@@ -104,6 +104,11 @@ public class UserProfileActivity extends AppCompatActivity implements UserProfil
         getPermittedUsers();
     }
 
+    public void backButtonPressed(View view){
+        onBackPressed();
+    }
+
+
     private void initializePermittedUsersCallback() {
         permittedUsersCallback = new ValueEventListener() {
             @Override

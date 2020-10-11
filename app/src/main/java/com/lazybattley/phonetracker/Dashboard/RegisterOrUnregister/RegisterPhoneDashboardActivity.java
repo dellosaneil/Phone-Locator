@@ -2,7 +2,6 @@ package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -215,7 +214,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         if (!state) {
             //Phone is currently not tracked
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                this.startForegroundService(serviceIntent);
+                ContextCompat.startForegroundService(this, serviceIntent);
             } else {
                 startService(serviceIntent);
             }
@@ -227,7 +226,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             if(checkGPSStatus()){
                 //Phone is currently tracked
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    this.startForegroundService(serviceIntent);
+                    ContextCompat.startForegroundService(this, serviceIntent);
                 } else {
                     startService(serviceIntent);
                 }
@@ -310,6 +309,13 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 2);
+            }
+        }
+
+
     }
 
     @Override
@@ -318,7 +324,11 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         if (requestCode == 1 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Cannot use application without permission.", Toast.LENGTH_LONG).show();
             onBackPressed();
-            finish();
+        }
+
+        if(requestCode == 2 && grantResults[0] != PackageManager.PERMISSION_GRANTED){
+            Toast.makeText(this, "Cannot use application without permission.", Toast.LENGTH_SHORT).show();
+            onBackPressed();
         }
     }
 

@@ -2,6 +2,7 @@ package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -67,8 +68,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     public static final String PHONE_REGISTRATION = "isRegistered";
     private SharedPreferences preferences;
     private boolean isRegistered;
-    private String buildId;
-    public static final String BUILD_ID = "buildId";
+    public static String BUILD_ID;
     public static final String DEVICE_NAME = "deviceName";
     public static final String EMAIL = "email";
     private static final String TAG = "RegisterPhoneDashboardA";
@@ -82,7 +82,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_phone_dashboard);
-        buildId = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+        BUILD_ID = Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         mainDeviceCheck();
         isRegistered();
         requestPermission();
@@ -128,7 +128,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
                     SignUpHelperClass user_details = snapshot.getValue(SignUpHelperClass.class);
-                    if (buildId.equals(user_details.getMainPhone())) {
+                    if (BUILD_ID.equals(user_details.getMainPhone())) {
                         isMainDevice = true;
                     }
                 } else {
@@ -166,7 +166,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
                     toast = Toast.makeText(RegisterPhoneDashboardActivity.this, "This phone is the 'Main Phone'.", Toast.LENGTH_SHORT);
                     toast.show();
                     Map<String, Object> updateMainPhone = new HashMap<>();
-                    updateMainPhone.put(MAIN_PHONE, buildId);
+                    updateMainPhone.put(MAIN_PHONE, BUILD_ID);
                     query.updateChildren(updateMainPhone);
                 }
             }
@@ -181,7 +181,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
 
     private void getCurrentStatus() {
         if (isRegistered) {
-            Query availability = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
+            Query availability = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(BUILD_ID);
             availability.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -206,18 +206,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
 
 
     private void startLocationTrackingService() {
-        DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
+        DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(BUILD_ID);
         Map<String, Object> deviceStatusUpdate = new HashMap<>();
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
-        serviceIntent.putExtra(IS_REGISTERED, state);
-        serviceIntent.putExtra(BUILD_ID, buildId);
         if (!state) {
             //Phone is currently not tracked
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                ContextCompat.startForegroundService(this, serviceIntent);
-            } else {
-                startService(serviceIntent);
-            }
+            stopService(serviceIntent);
             registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_track_phone));
             deviceStatusUpdate.put(AVAILABLE, false);
             updateActiveStatus();
@@ -309,13 +303,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED){
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 2);
             }
         }
-
-
     }
 
     @Override
@@ -330,13 +323,14 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             Toast.makeText(this, "Cannot use application without permission.", Toast.LENGTH_SHORT).show();
             onBackPressed();
         }
+
     }
 
     @Override
     public void phoneName(String phone) {
         isRegistered = true;
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(USERS)
-                .child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(buildId);
+                .child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(BUILD_ID);
         Map<String, Object> initializePhone = new HashMap<>();
         initializePhone.put(EMAIL, ENCODED_EMAIL);
         initializePhone.put(DEVICE_NAME, phone);

@@ -59,7 +59,9 @@
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
 
-        <service android:name=".Dashboard.RegisterOrUnregister.PhoneLocationService"/>
+        <service android:name=".Dashboard.RegisterOrUnregister.PhoneLocationService"
+            android:foregroundServiceType="location"
+            android:enabled="true"/>
     </application>
 
 </manifest>

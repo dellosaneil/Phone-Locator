@@ -2,6 +2,7 @@ package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -49,7 +50,6 @@ import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIV
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ACTIVE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.AVAILABLE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
-import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.IS_REGISTERED;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.REGISTERED_DEVICES;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.TRACEABLE;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
@@ -73,9 +73,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     public static final String EMAIL = "email";
     private static final String TAG = "RegisterPhoneDashboardA";
     private boolean isMainDevice;
-    private LocationManager locationManager;
     private Toast toast;
-
 
     @SuppressLint("HardwareIds")
     @Override
@@ -94,7 +92,6 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         cardViewRegistration();         //checks whether the device is registered.
         initRecyclerView();             //initialize the recyclerview
     }
-
 
     private void cardViewRegistration() {
         if (isRegistered) {
@@ -132,7 +129,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
                         isMainDevice = true;
                     }
                 } else {
-                    if(toast != null){
+                    if (toast != null) {
                         toast.cancel();
                     }
                     toast = Toast.makeText(RegisterPhoneDashboardActivity.this, TAG, Toast.LENGTH_SHORT);
@@ -160,7 +157,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 SignUpHelperClass userDetails = snapshot.getValue(SignUpHelperClass.class);
                 if (userDetails.getMainPhone().equals("No Phone")) {
-                    if(toast != null){
+                    if (toast != null) {
                         toast.cancel();
                     }
                     toast = Toast.makeText(RegisterPhoneDashboardActivity.this, "This phone is the 'Main Phone'.", Toast.LENGTH_SHORT);
@@ -209,6 +206,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
         DatabaseReference update = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(REGISTERED_DEVICES).child(BUILD_ID);
         Map<String, Object> deviceStatusUpdate = new HashMap<>();
         Intent serviceIntent = new Intent(this, PhoneLocationService.class);
+
         if (!state) {
             //Phone is currently not tracked
             stopService(serviceIntent);
@@ -216,19 +214,21 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             deviceStatusUpdate.put(AVAILABLE, false);
             updateActiveStatus();
 
+
         } else {
-            if(checkGPSStatus()){
+            if (checkGPSStatus()) {
                 //Phone is currently tracked
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     ContextCompat.startForegroundService(this, serviceIntent);
                 } else {
                     startService(serviceIntent);
                 }
+
                 deviceStatusUpdate.put(AVAILABLE, true);
                 registerPhone_registerOrUnregisterButton.setText(getString(R.string.register_or_unregister_untrack_phone));
-            }else{
+            } else {
                 state = false;
-                if(toast != null){
+                if (toast != null) {
                     toast.cancel();
                 }
                 toast = Toast.makeText(this, "Please enable your GPS.", Toast.LENGTH_SHORT);
@@ -242,7 +242,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
     }
 
     private boolean checkGPSStatus() {
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
@@ -279,7 +279,7 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
                         phoneDetails.add(new OwnPhoneDetailsHelperClass(singlePhone.getDeviceName(), phoneLocation, battery));
                     }
                 } else {
-                    if(toast != null){
+                    if (toast != null) {
                         toast.cancel();
                     }
                     toast = Toast.makeText(RegisterPhoneDashboardActivity.this, "No device registered", Toast.LENGTH_SHORT);
@@ -304,11 +304,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 2);
             }
         }
+
     }
 
     @Override
@@ -319,10 +320,12 @@ public class RegisterPhoneDashboardActivity extends AppCompatActivity implements
             onBackPressed();
         }
 
-        if(requestCode == 2 && grantResults[0] != PackageManager.PERMISSION_GRANTED){
+        if (requestCode == 2 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(this, "Cannot use application without permission.", Toast.LENGTH_SHORT).show();
             onBackPressed();
         }
+
+
 
     }
 

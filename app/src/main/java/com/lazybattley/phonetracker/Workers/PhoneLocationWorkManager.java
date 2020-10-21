@@ -48,7 +48,7 @@ public class PhoneLocationWorkManager extends Worker {
     private Map<String, Object> updateDevice;
     private ValueEventListener eventListener;
     private boolean activated;
-    private  Query query;
+    private Query query;
 
     public final String BATTERY_PERCENT = "batteryPercent";
     public final String LATITUDE = "latitude";
@@ -81,7 +81,6 @@ public class PhoneLocationWorkManager extends Worker {
         query = FirebaseDatabase.getInstance().getReference(USERS)
                 .child(ENCODED_EMAIL).child(USER_DETAIL);
         query.addValueEventListener(eventListener);
-
         return Result.success();
     }
 
@@ -92,21 +91,20 @@ public class PhoneLocationWorkManager extends Worker {
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
                 batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-
-                    Log.i(TAG, "onLocationResult: " + Thread.currentThread().getName());
-                    updateDevice = new HashMap<>();
-                    updatedAt = System.currentTimeMillis();
-                    updateDevice.put(BATTERY_PERCENT, batteryLevel);
-                    updateDevice.put(LATITUDE, locationResult.getLastLocation().getLatitude());
-                    updateDevice.put(LONGITUDE, locationResult.getLastLocation().getLongitude());
-                    updateDevice.put(UPDATE_AT, updatedAt);
-                    reference.updateChildren(updateDevice);
+                Log.i(TAG, "onLocationResult: " + Thread.currentThread().getName());
+                updateDevice = new HashMap<>();
+                updatedAt = System.currentTimeMillis();
+                updateDevice.put(BATTERY_PERCENT, batteryLevel);
+                updateDevice.put(LATITUDE, locationResult.getLastLocation().getLatitude());
+                updateDevice.put(LONGITUDE, locationResult.getLastLocation().getLongitude());
+                updateDevice.put(UPDATE_AT, updatedAt);
+                reference.updateChildren(updateDevice);
 
             }
         };
     }
 
-    private void initializeListener(){
+    private void initializeListener() {
         eventListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -114,21 +112,25 @@ public class PhoneLocationWorkManager extends Worker {
                 if (snapshot.exists()) {
                     SignUpHelperClass getActive = snapshot.getValue(SignUpHelperClass.class);
                     activated = getActive.isActivated();
-                    if(!activated){
+                    if (!activated) {
                         stopUpdate();
-                        query.removeEventListener(eventListener);
+                        removeListener();
                     }
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
             }
         };
     }
-//
 
-
+    //
+    private void removeListener() {
+        Log.i(TAG, "removeListener: ");
+        query.removeEventListener(eventListener);
+    }
 
 
     private void startUpdate() {

@@ -1,15 +1,19 @@
 package com.lazybattley.phonetracker.Dashboard.RegisterOrUnregister;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,22 +26,29 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.lazybattley.phonetracker.BroadcastReceiver.StopDoze;
 import com.lazybattley.phonetracker.HelperClasses.SignUpHelperClass;
 import com.lazybattley.phonetracker.R;
 import com.lazybattley.phonetracker.Workers.PhoneLocationWorkManager;
 
+import static com.lazybattley.phonetracker.BroadcastReceiver.StopDoze.WAKE_LOCK_CONSTANT;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.ENCODED_EMAIL;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USERS;
 import static com.lazybattley.phonetracker.Dashboard.MainDashBoardActivity.USER_DETAIL;
 
-public class PhoneLocationService extends Service{
+public class PhoneLocationService extends Service {
 
     private boolean activated;
     private static final String TAG = "PhoneLocationService";
     public static final String CHANNEL_ID = "Notification";
     private Query activatedStatusQuery;
-    private ValueEventListener trackerActivatedValueListener;
+    private ValueEventListener activatedListener;
     private Notification notification;
+    private PendingIntent broadcastIntent;
+    private AlarmManager alarmManager;
+    private Handler handler;
+    private Runnable broadcastRunnable;
+    private boolean wakeUp = true;
 
 
     @Override
@@ -45,8 +56,6 @@ public class PhoneLocationService extends Service{
         super.onCreate();
         Log.i(TAG, "onCreate: ");
         activatedStatusQuery = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
-
-        createNotificationChannel();
         Intent notificationIntent = new Intent(this, RegisterPhoneDashboardActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
         notification = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -56,9 +65,9 @@ public class PhoneLocationService extends Service{
                 .setContentIntent(pendingIntent)
                 .build();
 
+        createNotificationChannel();
         initializeListenerCallback();
-        activatedStatusQuery = FirebaseDatabase.getInstance().getReference(USERS).child(ENCODED_EMAIL).child(USER_DETAIL);
-        activatedStatusQuery.addValueEventListener(trackerActivatedValueListener);
+        activatedStatusQuery.addValueEventListener(activatedListener);
     }
 
     @Nullable
@@ -70,12 +79,7 @@ public class PhoneLocationService extends Service{
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "onStartCommand: ");
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
-        } else {
-            startForeground(1, notification);
-        }
+        test();
         return START_STICKY;
     }
 
@@ -92,6 +96,12 @@ public class PhoneLocationService extends Service{
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(serviceChannel);
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+        } else {
+            startForeground(1, notification);
+        }
     }
 
 
@@ -106,7 +116,7 @@ public class PhoneLocationService extends Service{
 
     private void initializeListenerCallback() {
         Log.i(TAG, "initializeListenerCallback: ");
-        trackerActivatedValueListener = new ValueEventListener() {
+        activatedListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()) {
@@ -115,6 +125,7 @@ public class PhoneLocationService extends Service{
                     handleEvent(activated);
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 
@@ -125,8 +136,60 @@ public class PhoneLocationService extends Service{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        activatedStatusQuery.removeEventListener(trackerActivatedValueListener);
+        wakeUp = false;
+        stopForeground(true);
+        activatedStatusQuery.removeEventListener(activatedListener);
+
         Log.i(TAG, "onDestroy: ");
     }
+
+    private void test(){
+
+        alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(this, StopDoze.class);
+        broadcastIntent = PendingIntent.getBroadcast(this,
+                123456, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        handler = new Handler();
+
+        broadcastRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if(wakeUp){
+                    if (Build.VERSION.SDK_INT >= 23) {
+                        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, 0, broadcastIntent);
+                        Toast.makeText(PhoneLocationService.this, "FIRST", Toast.LENGTH_SHORT).show();
+                    }
+                    else {
+                        alarmManager.setExact(AlarmManager.RTC_WAKEUP, 0, broadcastIntent);
+                        Toast.makeText(PhoneLocationService.this, "SECOND", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+        };
+
+        handler.postDelayed(broadcastRunnable , 250 * 60);
+
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
